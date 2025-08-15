@@ -10,5 +10,9 @@ export async function createNote({ title, body }){
     alert('Du skal være logget ind for at oprette noter.');
     return;
   }
+  if (!db) {
+    alert('Firestore er ikke initialiseret. Noten blev ikke gemt.');
+    return;
+  }
   await addDoc(userNotesCol(user.uid), { title, body, createdAt: serverTimestamp() });
 }

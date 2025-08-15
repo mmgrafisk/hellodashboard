@@ -4,10 +4,16 @@ import { GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from
 const provider = new GoogleAuthProvider();
 let currentUser = null;
 
-onAuthStateChanged(auth, (u) => {
-  currentUser = u || null;
-  window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: currentUser } }));
-});
+if (auth) {
+  onAuthStateChanged(auth, (u) => {
+    currentUser = u || null;
+    window.dispatchEvent(new CustomEvent('auth:changed', { detail: { user: currentUser } }));
+  });
+} else {
+  // running without firebase config; stay logged out
+  console.warn('[auth] Firebase Auth not initialized. Running in offline mode.');
+  currentUser = null;
+}
 
 export function getUser(){ return currentUser; }
 export async function waitForUser(timeoutMs=5000){
@@ -20,6 +26,10 @@ export async function waitForUser(timeoutMs=5000){
 }
 
 export async function firebaseLogin(){
+  if (!auth) {
+    alert('Kan ikke logge ind: Firebase Auth er ikke initialiseret.');
+    return null;
+  }
   try {
     const res = await signInWithPopup(auth, provider);
     console.info('[auth] signed in as', res.user?.email);
@@ -32,5 +42,6 @@ export async function firebaseLogin(){
 }
 
 export async function firebaseLogout(){
+  if (!auth) return;
   try { await signOut(auth); } catch (e) { console.error(e); }
 }
