@@ -1,3 +1,4 @@
+
 [build]
   publish = "site"
   command = "bash ./scripts/fetch_gjs.sh"
