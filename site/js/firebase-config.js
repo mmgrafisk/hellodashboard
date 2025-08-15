@@ -1,4 +1,3 @@
-
 window._FIREBASE_CONFIG = {
   apiKey: "AIzaSyA_LQ2KpSII31mR9mbeUMBzpx9JYy35T2g",
   authDomain: "mit-kontrolcenter.firebaseapp.com",

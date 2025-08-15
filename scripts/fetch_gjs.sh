@@ -14,6 +14,7 @@ cat > site/admin/index.html <<'EOF'
 <script src="./grapes.min.js"></script>
 <script>
 const editor = grapesjs.init({ container: '#gjs', fromElement: false, height: '100vh'});
+// Load current index.html markup (basic demo text)
 fetch('/index.html').then(r=>r.text()).then(html=>editor.setComponents(html));
 </script>
 </body></html>

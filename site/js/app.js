@@ -20,20 +20,6 @@ function greet(){
 
 function html(strings,...vals){return strings.map((s,i)=>s+(vals[i]??'')).join('')}
 
-// Normalize to avoid `.replace` on undefined
-function normalizeTask(t = {}) {
-  return {
-    id: t.id ?? (crypto.randomUUID?.() || String(Date.now())),
-    title: (t.title ?? 'Ny opgave').toString(),
-    description: (t.description ?? '').toString(),
-    priority: (t.priority ?? 'low').toString(),
-    status: (t.status ?? 'new').toString(),
-    category: (t.category ?? 'Uden kategori').toString(),
-    dueDate: t.dueDate ?? null,
-    createdAt: t.createdAt ?? null
-  };
-}
-
 function render(){
   const route = location.hash.replace('#','') || 'dashboard';
   q('#nav a.active')?.classList.remove('active');
@@ -99,9 +85,10 @@ function viewDashboard(main){
   `;
   ensureAuthCTA(main);
 
+  // Bind notes
   if (state.user){
     Notes.watchNotes(renderNotes);
-    Tasks.watchTasks((items)=> renderTasks(items.map(normalizeTask)));
+    Tasks.watchTasks(renderTasks);
   }
   q('#note-add')?.addEventListener('click', async ()=>{
     const title = q('#note-input').value.trim();
@@ -118,7 +105,7 @@ function renderNotes(items=[]){
   items.forEach(it=>{
     const row = document.createElement('div');
     row.className='check';
-    row.innerHTML = html`<input type="checkbox" ${it.checked?'checked':''}> <span>${(it.title??'').toString()}</span>`;
+    row.innerHTML = html\`<input type="checkbox" \${it.checked?'checked':''}> <span>\${it.title}</span>\`;
     const cb = row.querySelector('input');
     cb.addEventListener('change', ()=> Notes.toggleNote(it.id, cb.checked));
     list.appendChild(row);
@@ -134,23 +121,22 @@ function renderTasks(items=[]){
   items.forEach(t=>{
     const row = document.createElement('div');
     row.className='card pad';
-    const prio = (t.priority||'low').toString().replace(/\s+/g,'');
-    row.innerHTML = html`
+    row.innerHTML = html\`
       <div class="kv" style="justify-content:space-between">
-        <div class="kv"><span class="dot ${t.status}"></span> <b>${t.title}</b></div>
+        <div class="kv"><span class="dot \${t.status||'new'}"></span> <b>\${t.title||'Ny opgave'}</b></div>
         <div class="tags">
-          <span class="badge prio-${prio}">Prioritet: ${t.priority}</span>
-          <span class="tag">${t.category}</span>
+          <span class="badge prio-\${(t.priority||'low')}">Prioritet: \${t.priority||'lav'}</span>
+          <span class="tag">\${t.category||'Uden kategori'}</span>
         </div>
       </div>
-      <div class="small">${t.description||''}</div>
-    `;
+      <div class="small">\${t.description||''}</div>
+    \`;
     list.appendChild(row);
   });
 }
 
 function viewTasks(main){
-  main.innerHTML = html`
+  main.innerHTML = html\`
     <div class="topbar">
       <div><h1 class="h1">Opgaver</h1><p class="sub">Administrer dine opgaver og kategorier.</p></div>
       <div class="kv"><button class="btn" id="add-task">Tilføj Opgave</button> 
@@ -194,11 +180,11 @@ function viewTasks(main){
         </div>
       </div>
     </div>
-  `;
+  \`;
   ensureAuthCTA(main);
 
   if (state.user){
-    Tasks.watchTasks((items)=> renderTasks(items.map(normalizeTask)));
+    Tasks.watchTasks(renderTasks);
     Cats.watchCategories(renderCatUI);
   }
 
@@ -207,11 +193,11 @@ function viewTasks(main){
     populateCats('#t-cat');
     q('#task-save').onclick = async ()=>{
       const data = {
-        title: (q('#t-title').value||'Ny opgave').toString().trim(),
-        description: (q('#t-desc').value||'').toString().trim(),
-        priority: (q('#t-prio').value||'low').toString(),
-        status: (q('#t-status').value||'new').toString(),
-        category: (q('#t-cat').value||'Uden kategori').toString()
+        title: q('#t-title').value.trim(),
+        description: q('#t-desc').value.trim(),
+        priority: q('#t-prio').value,
+        status: q('#t-status').value,
+        category: q('#t-cat').value || null
       };
       await Tasks.createTask(data);
       hide('modal-task');
@@ -219,7 +205,7 @@ function viewTasks(main){
   });
   q('#btn-cats').addEventListener('click', ()=>{ show('modal-cats'); });
   q('#cat-add').addEventListener('click', async ()=>{
-    const name = (q('#cat-new').value||'').toString().trim();
+    const name = q('#cat-new').value.trim();
     if (!name) return;
     await Cats.createCategory(name);
     q('#cat-new').value='';
@@ -234,7 +220,7 @@ function renderCatUI(cats=[]){
   cats.forEach(c=>{
     const row = document.createElement('div');
     row.className='kv'; row.style.justifyContent='space-between'; row.style.padding='6px 2px';
-    row.innerHTML = '<div>'+((c.name??'').toString())+'</div><div class="kv"><button class="btn muted" data-act="edit">Rediger</button> <button class="btn muted" data-act="del">Slet</button></div>';
+    row.innerHTML = '<div>'+c.name+'</div><div class="kv"><button class="btn muted" data-act="edit">Rediger</button> <button class="btn muted" data-act="del">Slet</button></div>';
     row.querySelector('[data-act="edit"]').onclick = async ()=>{
       const name = prompt('Nyt navn', c.name);
       if (name) Cats.renameCategory(c.id, name);
@@ -315,15 +301,15 @@ function viewLinks(main){
     items.forEach(it=>{
       const card = document.createElement('div');
       card.className='card pad';
-      card.innerHTML = html`
+      card.innerHTML = html\`
         <div class="kv" style="justify-content:space-between">
-          <div class="kv" style="gap:10px"><div class="tag">${(it.category||'Ukendt').toString()}</div><b>${(it.title||'Link').toString()}</b></div>
+          <div class="kv" style="gap:10px"><div class="tag">\${it.category||'Ukendt'}</div><b>\${it.title||'Link'}</b></div>
           <div class="kv"><button class="btn muted" data-act="edit">✎</button>
           <button class="btn muted" data-act="del">🗑</button></div>
         </div>
-        <div class="small" style="margin:6px 0">${(it.description||'').toString()}</div>
-        <a class="btn ghost" href="${(it.url||'#').toString()}" target="_blank">Besøg link</a>
-      `;
+        <div class="small" style="margin:6px 0">\${it.description||''}</div>
+        <a class="btn ghost" href="\${it.url}" target="_blank">Besøg link</a>
+      \`;
       card.querySelector('[data-act="del"]').onclick = ()=> Links.removeLink(it.id);
       card.querySelector('[data-act="edit"]').onclick = ()=> alert('Redigering kan tilføjes hurtigt – fokus nu er CRUD & lister.');
       list.appendChild(card);
@@ -337,10 +323,10 @@ function viewLinks(main){
   q('#link-add').onclick = ()=>{ show('modal-link'); };
   q('#link-save').onclick = async ()=>{
     const data = {
-      title:(q('#l-title').value||'Link').toString().trim(),
-      category:(q('#l-cat').value||'Ukendt').toString().trim(),
-      url:(q('#l-url').value||'').toString().trim(),
-      description:(q('#l-desc').value||'').toString().trim()
+      title:q('#l-title').value.trim(),
+      category:q('#l-cat').value.trim(),
+      url:q('#l-url').value.trim(),
+      description:q('#l-desc').value.trim()
     };
     await Links.createLink(data);
     hide('modal-link');
