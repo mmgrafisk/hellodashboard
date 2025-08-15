@@ -1,34 +1,32 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-app.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
+import { getAnalytics, isSupported as analyticsSupported } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-analytics.js";
 
-async function loadConfig() {
-  // 1) prøv config-fil skrevet af Netlify-build
-  try {
-    const res = await fetch('/firebase-config.json', { cache: 'no-store' });
-    if (res.ok) return await res.json();
-  } catch (e) {
-    console.warn('[firebase-init] fetch /firebase-config.json fejlede:', e);
-  }
-
-  // 2) fallback: Vite env eller global var
-  const raw = (import.meta?.env?.VITE_FIREBASE_CONFIG) ?? (window.__FIREBASE_CONFIG__);
-  if (!raw) throw new Error('[firebase-init] Missing firebase config; running offline.');
-  return typeof raw === 'string' ? JSON.parse(raw) : raw;
+async function loadConfigStrict() {
+  const res = await fetch('/firebase-config.json', { cache: 'no-store' });
+  if (!res.ok) throw new Error('[firebase-init] firebase-config.json mangler – tjek Netlify env og build.');
+  return await res.json();
 }
 
 export let app = null;
 export let db = null;
-export let isOffline = true;
+export let auth = null;
+export let analytics = null;
+export let isOffline = false;
 
 try {
-  const cfg = await loadConfig();
+  const cfg = await loadConfigStrict();
   app = initializeApp(cfg);
   db = getFirestore(app);
-  isOffline = false;
-  console.info('[firebase-init] Firebase config loaded');
+  auth = getAuth(app);
+
+  // Analytics kun hvis browseren understøtter det og measurementId er sat
+  if (cfg.measurementId && (await analyticsSupported().catch(() => false))) {
+    analytics = getAnalytics(app);
+  }
+  console.info('[firebase-init] Firebase config loaded (env-only).');
 } catch (err) {
-  console.error(err.message);
-  app = null;
-  db = null;
-  isOffline = true;
+  console.error('[firebase-init] Missing firebase config; running offline.', err?.message || err);
+  app = null; db = null; auth = null; analytics = null; isOffline = true;
 }

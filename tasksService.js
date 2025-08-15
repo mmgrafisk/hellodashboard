@@ -1,7 +1,5 @@
 import { db, isOffline } from './firebase-init.js';
-import {
-  collection, addDoc, serverTimestamp, query, orderBy, onSnapshot
-} from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
+import { collection, addDoc, serverTimestamp, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
 const state = { tasks: [] };
 
@@ -13,7 +11,8 @@ function render(listEl) {
     li.innerHTML = `<span>${t.title}</span><span class="text-xs text-slate-500">${t.status ?? ''}</span>`;
     listEl.appendChild(li);
   });
-  document.getElementById('activeCount').textContent = state.tasks.length.toString();
+  const countEl = document.getElementById('activeCount');
+  if (countEl) countEl.textContent = state.tasks.length.toString();
 }
 
 async function addTaskOnline(title) {
@@ -30,10 +29,12 @@ export function setupTasksUI() {
   const btn = document.getElementById('addTask');
   const list = document.getElementById('taskList');
 
+  if (!input || !btn || !list) return;
+
   btn.addEventListener('click', async () => {
     const title = (input.value || '').trim();
     if (!title) return;
-    if (isOffline || !db) {
+    if (isOffline) {
       alert('Ingen forbindelse til Firestore endnu. Opgaven gemmes lokalt.');
       addTaskOffline(title);
       render(list);
@@ -50,17 +51,13 @@ export function setupTasksUI() {
     }
   });
 
-  // Live Firestore lytning (hvis online)
-  if (!isOffline && db) {
+  if (!isOffline) {
     const q = query(collection(db, 'tasks'), orderBy('createdAt', 'desc'));
     onSnapshot(q, (snap) => {
       state.tasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
       render(list);
-    }, (err) => {
-      console.error('onSnapshot error', err);
-    });
+    }, (err) => console.error('onSnapshot error', err));
   } else {
-    // offline init
     render(list);
   }
 }
