@@ -1,0 +1,1645 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kontrolcenter - Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F8F7FF;
+            color: #1A202C;
+        }
+        .nav-link {
+            display: flex; align-items: center; padding: 0.75rem 1rem; border-radius: 0.5rem;
+            transition: all 0.2s ease-in-out; color: #4A5568; font-weight: 500; cursor: pointer;
+        }
+        .nav-link:hover { color: #1A202C; }
+        .nav-link.active { background-color: #ffffff; color: #4A43E3; font-weight: 600; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+        .nav-link.active svg { color: #4A43E3; }
+        .nav-link svg { margin-right: 0.75rem; width: 1.25rem; height: 1.25rem; color: #A0AEC0; }
+        .modal-backdrop { background-color: rgba(0,0,0,0.5); }
+        .task-item {
+            background-color: #FFFFFF; border: 1px solid #E2E8F0; border-radius: 0.75rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .task-item-clickable { cursor: pointer; }
+        .task-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+        }
+        .priority-high-indicator { width: 8px; height: 8px; background-color: #F56565; border-radius: 50%; }
+        .status-badge { font-size: 0.75rem; font-weight: 600; padding: 0.25rem 0.6rem; border-radius: 9999px; text-transform: uppercase; letter-spacing: 0.05em; }
+        .status-ny { background-color: #EBF4FF; color: #4299E1; }
+        .status-igangvaerende { background-color: #F0FFF4; color: #48BB78; }
+        .status-venter { background-color: #FFF5F5; color: #C53030; }
+        .status-udfoert { background-color: #F7FAFC; color: #718096; }
+        .main-button { background-color: #4A43E3; color: white; box-shadow: 0 4px 6px -1px rgba(74, 67, 227, 0.2), 0 2px 4px -1px rgba(74, 67, 227, 0.12); }
+        .main-button:hover { background-color: #413ACA; }
+        .dashboard-card { background-color: #ffffff; border-radius: 1rem; padding: 1.5rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1px rgba(0,0,0,0.03); display: flex; flex-direction: column;}
+        .dashboard-card-compact { background-color: #ffffff; border-radius: 1rem; padding: 1rem; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05), 0 2px 4px -1-rgba(0,0,0,0.03); display: flex; flex-direction: column;}
+        .tab-button { padding: 0.5rem 1rem; font-weight: 600; color: #4A5568; border-radius: 0.5rem; transition: all 0.2s ease-in-out; border: 2px solid transparent; }
+        .tab-button:hover { background-color: #F7FAFC; color: #1A202C; }
+        .tab-button.active { border-bottom: 2px solid #4A43E3; color: #4A43E3; border-radius: 0; }
+        .secondary-button {
+            background-color: #E0E7FF;
+            color: #3730A3;
+            font-weight: 600;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: background-color 0.2s;
+        }
+        .secondary-button:hover {
+            background-color: #C7D2FE;
+        }
+        .card-icon {
+            width: 2rem;
+            height: 2rem;
+            margin-bottom: 0.75rem;
+        }
+        .header-link {
+            background-color: #F8F7FF;
+            color: #4A5568;
+            font-weight: 500;
+            border-radius: 0.5rem;
+            padding: 0.5rem 1rem;
+            transition: all 0.2s;
+            border: 1px solid #E2E8F0;
+            font-size: 0.875rem;
+        }
+        .header-link:hover {
+            background-color: #ffffff;
+            color: #3730A3;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+        }
+        .filter-button {
+             padding: 0.25rem 0.75rem; font-weight: 500; font-size: 0.875rem; color: #4A5568; border-radius: 0.5rem; transition: all 0.2s ease-in-out; border: 1px solid transparent;
+        }
+        .filter-button.active {
+            background-color: #ffffff; color: #4A43E3; font-weight: 600; border-color: #E2E8F0; box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+        }
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #CBD5E0;
+            border-radius: 0.5rem;
+            background-color: #FDFDFD;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #4A43E3;
+            box-shadow: 0 0 0 3px rgba(74,67,227,0.2);
+            background-color: #fff;
+        }
+        [contenteditable]:focus {
+            outline: 2px solid #C7D2FE;
+            background-color: #F8F7FF;
+            border-radius: 4px;
+        }
+        .delete-item-btn {
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        .remember-item:hover .delete-item-btn {
+            opacity: 1;
+        }
+        .action-button {
+            padding: 0.3rem; border-radius: 9999px; cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .action-button:hover { background-color: #F1F1F1; }
+        .link-card {
+            background-color: #ffffff;
+            border-radius: 1.25rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s ease-in-out;
+            border: 1px solid #F3F4F6;
+            display: flex;
+            flex-direction: column;
+        }
+        .link-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            background-color: #FAFBFF;
+        }
+        .link-card-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            object-fit: contain;
+        }
+    </style>
+</head>
+<body class="text-gray-800">
+
+    <div id="login-screen" class="fixed inset-0 bg-gray-100 z-50 flex items-center justify-center">
+        <div class="bg-white p-10 rounded-2xl shadow-xl w-full max-w-sm">
+            <h1 class="text-3xl font-bold text-gray-800 text-center">Kontrolcenter</h1>
+            <p class="text-gray-600 mb-6 text-center mt-2">Log ind for at fortsætte</p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label for="email-input" class="block text-sm font-medium text-gray-700">E-mailadresse</label>
+                    <input type="email" id="email-input" class="form-input mt-1" placeholder="din@email.com">
+                </div>
+                <div>
+                    <label for="password-input" class="block text-sm font-medium text-gray-700">Adgangskode</label>
+                    <input type="password" id="password-input" class="form-input mt-1" placeholder="••••••••">
+                </div>
+            </div>
+
+            <p id="auth-error" class="text-red-500 text-sm text-center mt-4 h-4"></p> <div class="mt-6 space-y-3">
+                 <button id="login-btn" class="w-full main-button font-bold py-3 px-4 rounded-lg transition-all">Log ind</button>
+                 <button id="signup-btn" class="w-full secondary-button font-bold py-3 px-4 rounded-lg transition-all">Opret bruger</button>
+            </div>
+
+            <div class="my-6 flex items-center">
+                <div class="flex-grow border-t border-gray-300"></div>
+                <span class="flex-shrink mx-4 text-gray-400 text-sm">eller</span>
+                <div class="flex-grow border-t border-gray-300"></div>
+            </div>
+
+            <button id="google-login-btn" class="w-full bg-white hover:bg-gray-50 border border-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg flex items-center justify-center transition-all shadow-sm">
+                <svg class="w-5 h-5 mr-3" viewBox="0 0 48 48"><path fill="#FFC107" d="M43.611 20.083H42V20H24v8h11.303c-1.649 4.657-6.08 8-11.303 8c-6.627 0-12-5.373-12-12s5.373-12 12-12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C12.955 4 4 12.955 4 24s8.955 20 20 20s20-8.955 20-20c0-1.341-.138-2.65-.389-3.917z"></path><path fill="#FF3D00" d="M6.306 14.691l6.571 4.819C14.655 15.108 18.961 12 24 12c3.059 0 5.842 1.154 7.961 3.039l5.657-5.657C34.046 6.053 29.268 4 24 4C16.318 4 9.656 8.337 6.306 14.691z"></path><path fill="#4CAF50" d="M24 44c5.166 0 9.86-1.977 13.409-5.192l-6.19-5.238C29.211 35.091 26.715 36 24 36c-5.223 0-9.641-3.657-11.303-8H6.306C9.656 39.663 16.318 44 24 44z"></path><path fill="#1976D2" d="M43.611 20.083H42V20H24v8h11.303c-.792 2.237-2.231 4.166-4.087 5.571l6.19 5.238C42.012 36.49 44 30.686 44 24c0-1.341-.138-2.65-.389-3.917z"></path></svg>
+                Fortsæt med Google
+            </button>
+        </div>
+    </div>
+
+
+    <div class="flex h-screen hidden">
+        <aside class="w-64 bg-white/80 border-r border-gray-200/80 p-6 flex flex-col">
+            <div class="flex items-center mb-10">
+                <div class="w-8 h-8 bg-gradient-to-br from-purple-500 to-blue-500 rounded-lg mr-3"></div>
+                <span class="font-bold text-xl text-gray-800">Kontrolcenter</span>
+            </div>
+            <nav class="flex-grow">
+                <div class="space-y-2">
+                    <a id="nav-dashboard" class="nav-link active"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6A2.25 2.25 0 016 3.75h2.25A2.25 2.25 0 0110.5 6v2.25a2.25 2.25 0 01-2.25 2.25H6a2.25 2.25 0 01-2.25-2.25V6zM3.75 15.75A2.25 2.25 0 016 13.5h2.25a2.25 2.25 0 012.25 2.25V18a2.25 2.25 0 01-2.25 2.25H6A2.25 2.25 0 013.75 18v-2.25zM13.5 6a2.25 2.25 0 012.25-2.25H18A2.25 2.25 0 0120.25 6v2.25A2.25 2.25 0 0118 10.5h-2.25a2.25 2.25 0 01-2.25-2.25V6zM13.5 15.75a2.25 2.25 0 012.25-2.25H18a2.25 2.25 0 012.25 2.25V18A2.25 2.25 0 0118 20.25h-2.25A2.25 2.25 0 0113.5 18v-2.25z" /></svg><span data-translate="nav_dashboard">Dashboard</span></a>
+                    <a id="nav-opgaver" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg><span data-translate="nav_opgaver">Opgaver</span></a>
+                    <a id="nav-rapporter" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-12a2.25 2.25 0 01-2.25-2.25V3.75m16.5 0v16.5h-16.5V3.75" /></svg><span data-translate="nav_rapporter">Rapporter</span></a>
+                    <a id="nav-integrationer" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg><span data-translate="nav_integrationer">Integrationer</span></a>
+                    <a id="nav-links" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244" /></svg><span data-translate="nav_links">Links</span></a>
+                </div>
+                <div class="pt-4 mt-4 border-t border-gray-200">
+                    <p class="px-4 pt-2 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">Mine Projekter</p>
+                    <div class="space-y-2">
+                        <a href="#" class="nav-link text-sm"><span class="w-2 h-2 bg-blue-500 rounded-full mr-3"></span>Projekt Phoenix</a>
+                    </div>
+                </div>
+                 <div class="pt-4 mt-4 border-t border-gray-200">
+                    <p class="px-4 pt-2 pb-2 text-xs font-semibold text-gray-500 uppercase tracking-wider">AI</p>
+                    <div class="space-y-2">
+                        <a id="nav-ai-agents" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.3-2.3L12.75 18l1.197-.398a3.375 3.375 0 002.3-2.3L16.5 14.25l.398 1.197a3.375 3.375 0 002.3 2.3l1.197.398-1.197.398a3.375 3.375 0 00-2.3 2.3z" /></svg>AI Agents</a>
+                    </div>
+                </div>
+            </nav>
+            <div class="mt-auto">
+                 <a id="nav-indstillinger" class="nav-link"><svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.645.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 011.37.49l1.296 2.247a1.125 1.125 0 01-.26 1.431l-1.003.827c-.293.24-.438.613-.438.995a6.427 6.427 0 010 .255c0 .382.145.755.438.995l1.003.827c.446.367.592.984.26 1.431l-1.296 2.247a1.125 1.125 0 01-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.076-.124a6.57 6.57 0 01-.22.127c-.332.183-.582.495-.645.87l-.213 1.281c-.09.543-.56.94-1.11.94h-2.593c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.063-.374-.313-.686-.645-.87a6.52 6.52 0 01-.22-.127c-.324-.196-.72-.257-1.075-.124l-1.217.456a1.125 1.125 0 01-1.37-.49l-1.296-2.247a1.125 1.125 0 01.26-1.431l1.003-.827c.293-.24.438.613-.438.995a6.427 6.427 0 010-.255c0-.382-.145-.755-.438.995l-1.003-.827a1.125 1.125 0 01-.26-1.431l1.296-2.247a1.125 1.125 0 011.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.127.332-.183.582.495-.645-.87l.213-1.281z" /><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" /></svg><span data-translate="nav_settings">Indstillinger</span></a>
+                 <a id="logout-btn" class="nav-link">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V15M12 9l-3 3m0 0l3 3m-3-3h12.75" />
+                    </svg>
+                    <span>Log ud</span>
+                </a>
+            </div>
+        </aside>
+
+        <div class="flex-1 overflow-y-auto">
+             <main id="page-dashboard" class="page p-8 md:p-12">
+                <header class="mb-12 flex justify-between items-start">
+                    <div>
+                        <p id="dashboard-date" class="text-gray-500 font-medium"></p>
+                        <h1 class="text-4xl font-bold text-gray-800 mt-2"><span data-translate="greeting">Hej</span>, <span id="user-name-display"></span></h1>
+                        <p class="text-2xl mt-2">
+                            <span data-translate="tagline" class="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-500 font-medium">
+                                Hvordan kan jeg hjælpe dig i dag?
+                            </span>
+                        </p>
+                         <div class="mt-6 flex flex-wrap gap-4">
+                            <button id="add-task-btn-dash" class="secondary-button flex items-center">
+                                 <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" /></svg>
+                                 <span data-translate="add_task">Tilføj Opgave</span>
+                            </button>
+                            <button id="ask-ai-btn" class="font-semibold py-2 px-4 rounded-lg flex items-center text-white bg-gradient-to-r from-purple-500 to-indigo-600 hover:from-purple-600 hover:to-indigo-700 transition-all shadow-md hover:shadow-lg">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="h-5 w-5 mr-2"><path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.898 20.553L16.5 21.75l-.398-1.197a3.375 3.375 0 00-2.3-2.3L12.75 18l1.197-.398a3.375 3.375 0 002.3-2.3L16.5 14.25l.398 1.197a3.375 3.375 0 002.3 2.3l1.197.398-1.197.398a3.375 3.375 0 00-2.3 2.3z"></path></svg>
+                                <span data-translate="ask_ai">Spørg AI</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div id="header-links-container" class="flex items-center gap-2 flex-wrap justify-end">
+                        </div>
+                </header>
+
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                    <div class="lg:col-span-2 space-y-8 flex flex-col">
+                        <div class="dashboard-card flex-grow">
+                            <div class="flex flex-wrap gap-4 justify-between items-center mb-4">
+                                <h2 class="text-xl font-semibold text-gray-800" id="dashboard-task-title" data-translate="tasks">Opgaver</h2>
+                                <div id="dashboard-task-view-switcher" class="flex items-center p-1 bg-gray-100 rounded-lg">
+                                    </div>
+                            </div>
+                           
+                            <div id="dashboard-filters" class="mb-4 p-4 bg-gray-50 rounded-lg grid grid-cols-1 md:grid-cols-4 gap-4 items-center"></div>
+                            
+                            <div id="dashboard-tasks-container" class="space-y-3 overflow-y-auto pr-2 flex-grow"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="lg:col-span-1 space-y-8">
+                        <div id="remember-card-container"></div>
+                        <div id="rss-feed-container"></div>
+                    </div>
+                </div>
+            </main>
+
+            <main id="page-opgaver" class="page hidden p-8 md:p-12">
+                <header class="flex justify-between items-center mb-6">
+                    <div><h1 class="text-3xl font-bold text-gray-900" data-translate="nav_opgaver">Opgaver</h1><p class="text-gray-500 mt-1">Administrer dine opgaver og kategorier.</p></div>
+                    <div class="flex items-center gap-4">
+                        <button id="manage-categories-btn" class="secondary-button font-semibold py-2 px-4 rounded-lg flex items-center transition-all">Administrer Kategorier</button>
+                        <button id="add-task-btn-opg" class="main-button font-semibold py-2 px-4 rounded-lg flex items-center transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" /></svg><span data-translate="add_task">Tilføj Opgave</span></button>
+                    </div>
+                </header>
+                
+                <div class="mb-6 border-b border-gray-200 flex justify-between items-center">
+                    <div id="task-tabs" class="flex items-center space-x-1 flex-wrap"></div>
+                </div>
+                
+                <div id="task-list-content" class="space-y-3"></div>
+            </main>
+            
+            <main id="page-links" class="page hidden p-8 md:p-12">
+                <header class="flex justify-between items-center mb-6">
+                    <div><h1 class="text-3xl font-bold text-gray-900" data-translate="nav_links">Links</h1><p class="text-gray-500 mt-1">Administrer dine bogmærker og hurtige links.</p></div>
+                    <button id="add-link-btn" class="main-button font-semibold py-2 px-4 rounded-lg flex items-center transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" /></svg>Tilføj Link</button>
+                </header>
+                 <div class="mb-6">
+                    <input type="text" id="links-filter-input" placeholder="Søg i links efter titel, kategori eller beskrivelse..." class="form-input">
+                </div>
+                <div id="links-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    </div>
+            </main>
+
+            <main id="page-rapporter" class="page hidden p-8 md:p-12">
+                 <header class="flex justify-between items-center mb-10">
+                    <div><h1 class="text-3xl font-bold text-gray-900" data-translate="nav_rapporter">Rapport Builder</h1><p class="text-gray-500 mt-1">Sammensæt din månedsrapport ved at tilføje indholdsblokke.</p></div>
+                    <button class="main-button font-semibold py-2 px-5 rounded-lg transition-all">Eksporter som PDF</button>
+                </header>
+                <div class="bg-white p-8 rounded-lg border border-gray-200 mb-8">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex-grow">
+                            <label for="report-title" class="block text-sm font-medium text-gray-700 mb-1">Rapport Titel</label>
+                            <input type="text" id="report-title" value="Månedsrapport August 2025" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div class="flex-grow">
+                            <label for="report-period" class="block text-sm font-medium text-gray-700 mb-1">Periode</label>
+                            <input type="month" id="report-period" value="2025-08" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                    </div>
+                </div>
+
+                <div id="report-content" class="space-y-6">
+                     <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Forord</h3>
+                        <p class="text-gray-600">August måned har været en fantastisk spændende måned med flere arrangementer både i huset og ude af huset. Det var fantastisk for mig at opleve vejlederarrangement i både København og Fredericia...</p>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Fuldførte Opgaver (Team Total)</h3>
+                        <ul class="list-disc list-inside text-gray-600 space-y-1">
+                            <li>Gennemgået Q3 marketingbudget (Ansvarlig: Mig)</li>
+                            <li>Forberedt præsentation til bestyrelsesmøde (Ansvarlig: Mig)</li>
+                        </ul>
+                    </div>
+                     <div class="bg-white p-6 rounded-lg border border-gray-200">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-4">Nøgletal fra Integrationer</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                            <div class="bg-gray-50 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-500">Besøgende (Analytics)</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1">25,104</p>
+                            </div>
+                            <div class="bg-gray-50 p-4 rounded-lg text-center">
+                                <p class="text-sm text-gray-500">Annoncespend (Facebook)</p>
+                                <p class="text-3xl font-bold text-gray-900 mt-1">5.430 kr.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+
+            <main id="page-integrationer" class="page hidden p-8 md:p-12">
+                 <header class="flex justify-between items-center mb-6">
+                    <div><h1 class="text-3xl font-bold text-gray-900" data-translate="nav_integrationer">Integrationer</h1><p class="text-gray-500 mt-1">Forbind dine eksterne tjenester for at berige dine rapporter.</p></div>
+                 </header>
+                 <div class="mb-6">
+                    <input type="text" id="integrations-filter-input" placeholder="Søg i integrationer..." class="form-input">
+                </div>
+                 <div id="integrations-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4"></div>
+            </main>
+
+            <main id="page-ai-agents" class="page hidden p-8 md:p-12">
+                <header class="flex justify-between items-center mb-10">
+                    <div><h1 class="text-3xl font-bold text-gray-900">AI Agents</h1><p class="text-gray-500 mt-1">Administrer dine foretrukne AI-værktøjer.</p></div>
+                    <button id="add-agent-btn" class="main-button font-semibold py-2 px-4 rounded-lg flex items-center transition-all"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor"><path d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" /></svg>Tilføj Agent</button>
+                </header>
+                <div id="ai-agents-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            </main>
+            
+            <main id="page-indstillinger" class="page hidden p-8 md:p-12">
+                <header class="mb-10">
+                    <div><h1 class="text-3xl font-bold text-gray-900" data-translate="settings_title">Indstillinger</h1><p class="text-gray-500 mt-1" data-translate="settings_subtitle">Administrer dine personlige præferencer.</p></div>
+                </header>
+                <div class="dashboard-card max-w-lg">
+                    <div class="space-y-6">
+                        <div>
+                            <label for="user-name-input" class="block text-sm font-medium text-gray-700 mb-1" data-translate="settings_your_name">Dit Navn</label>
+                            <input type="text" id="user-name-input" placeholder="Indtast dit navn..." class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                        </div>
+                        <div>
+                            <label for="language-select" class="block text-sm font-medium text-gray-700 mb-1">Sprog</label>
+                            <select id="language-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                <option value="da">Dansk</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                        <div class="flex justify-end pt-4 border-t">
+                             <button id="save-settings-btn" class="main-button font-semibold py-2 px-5 rounded-lg transition-all"><span data-translate="settings_save">Gem Indstillinger</span></button>
+                        </div>
+                        <p id="save-confirmation" class="text-green-600 text-sm hidden">Indstillinger gemt!</p>
+                    </div>
+                </div>
+            </main>
+
+        </div>
+    </div>
+    
+    <div id="modal" class="fixed inset-0 z-50 items-center justify-center hidden">
+        <div id="modal-backdrop" class="modal-backdrop fixed inset-0"></div>
+        <div id="modal-content" class="bg-white rounded-lg shadow-2xl w-11/12 md:max-w-2xl mx-auto z-10 p-8 relative">
+            <h3 id="modal-title" class="text-2xl font-bold mb-6">Modal Title</h3>
+            <div id="modal-body"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        // Importer de nødvendige funktioner fra Firebase SDK'erne
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { 
+            getAuth, 
+            GoogleAuthProvider, 
+            signInWithPopup, 
+            onAuthStateChanged, 
+            signOut,
+            createUserWithEmailAndPassword,
+            signInWithEmailAndPassword
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { 
+            getFirestore,
+            collection,
+            setDoc,
+            doc,
+            getDocs,
+            deleteDoc
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"; // Rettet import her
+        import { getFunctions, httpsCallable } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-functions.js";
+        
+        // VIGTIGT: Din web-apps Firebase konfiguration
+        const firebaseConfig = {
+            apiKey: "AIzaSyA_LQ2KpSII31mR9mbeUMBzpx9JYy35T2g",
+            authDomain: "mit-kontrolcenter.firebaseapp.com",
+            projectId: "mit-kontrolcenter",
+            storageBucket: "mit-kontrolcenter.appspot.com",
+            messagingSenderId: "981412245600",
+            appId: "1:981412245600:web:5fbde74608b29fd59bd305",
+            measurementId: "G-S0Q385R4PV"
+        };
+
+        // Initialiser Firebase
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+        const functions = getFunctions(app, 'europe-west1');
+        const askAIFunction = httpsCallable(functions, 'askAI');
+
+        // Gør funktioner tilgængelige globalt
+        window.auth = auth;
+        window.GoogleAuthProvider = GoogleAuthProvider;
+        window.signInWithPopup = signInWithPopup;
+        window.onAuthStateChanged = onAuthStateChanged;
+        window.signOut = signOut;
+        window.createUserWithEmailAndPassword = createUserWithEmailAndPassword;
+        window.signInWithEmailAndPassword = signInWithEmailAndPassword;
+        
+        // Gør Firebase helper-funktioner tilgængelige globalt
+        window.saveTasksToFirestore = async (tasks, uid) => {
+            const batch = [];
+            for (let task of tasks) {
+                const taskRef = doc(db, "users", uid, "tasks", String(task.id));
+                batch.push(setDoc(taskRef, task));
+            }
+            await Promise.all(batch);
+        };
+
+        window.loadTasksFromFirestore = async (uid) => {
+            const querySnapshot = await getDocs(collection(db, "users", uid, "tasks"));
+            let loadedTasks = [];
+            querySnapshot.forEach((doc) => {
+                loadedTasks.push(doc.data());
+            });
+            return loadedTasks;
+        };
+
+        window.deleteTaskFromFirestore = async (uid, taskId) => {
+            const taskRef = doc(db, "users", uid, "tasks", String(taskId));
+            await deleteDoc(taskRef);
+        };
+        
+        window.askAIFunction = askAIFunction;
+    </script>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- TRANSLATION DATA ---
+            const translations = {
+                da: {
+                    greeting: 'Hej',
+                    tagline: 'Hvordan kan jeg hjælpe dig i dag?',
+                    tasks: 'Opgaver',
+                    nav_dashboard: 'Dashboard',
+                    nav_opgaver: 'Opgaver',
+                    nav_rapporter: 'Rapporter',
+                    nav_integrationer: 'Integrationer',
+                    nav_links: 'Links',
+                    nav_settings: 'Indstillinger',
+                    settings_title: 'Indstillinger',
+                    settings_subtitle: 'Administrer dine personlige præferencer.',
+                    settings_your_name: 'Dit Navn',
+                    settings_save: 'Gem Indstillinger',
+                    add_task: 'Tilføj Opgave',
+                    ask_ai: 'Spørg AI',
+                    page_tasks_title: 'Opgaver',
+                    page_links_title: 'Links',
+                    page_reports_title: 'Report Builder',
+                    page_integrations_title: 'Integrationer'
+                },
+                en: {
+                    greeting: 'Hello',
+                    tagline: 'How can I help you today?',
+                    tasks: 'Tasks',
+                    nav_dashboard: 'Dashboard',
+                    nav_opgaver: 'Tasks',
+                    nav_rapporter: 'Reports',
+                    nav_integrationer: 'Integrations',
+                    nav_links: 'Links',
+                    nav_settings: 'Settings',
+                    settings_title: 'Settings',
+                    settings_subtitle: 'Manage your personal preferences.',
+                    settings_your_name: 'Your Name',
+                    settings_save: 'Save Settings',
+                    add_task: 'Add Task',
+                    ask_ai: 'Ask AI',
+                    page_tasks_title: 'Tasks',
+                    page_links_title: 'Links',
+                    page_reports_title: 'Report Builder',
+                    page_integrations_title: 'Integrations'
+                }
+            };
+            
+            // --- STATE MANAGEMENT ---
+            let userSettings = { 
+                name: 'Bruger',
+                rssFeedUrl: '',
+                rssFeedTitle: 'Seneste Nyt fra Feed',
+                language: 'da'
+            };
+            
+            let rememberCardData = {
+                title: 'Husk',
+                items: [
+                    { id: 1, text: 'Månedsrapport (d. 5 i måneden)', checked: false },
+                    { id: 2, text: 'Kage til på tirsdag', checked: true }
+                ]
+            };
+
+            // NYE OPGAVER INDLÆST FRA FIL
+            let localTasks = [
+                { id: 1, text: 'Udarbejdelse af SoMe contentplan for September', status: 'ny', priority: 'hoej', responsible: 'Kevin', type: 'Marketing', deadline: '2025-08-15', time: 8, description: 'Planlæg posts for Facebook, Instagram og LinkedIn for hele september måned.' },
+                { id: 2, text: 'Klargør præsentation til bestyrelsesmøde', status: 'ny', priority: 'hoej', responsible: 'Kevin', type: 'Ledelse', deadline: '2025-08-20', time: 5, description: 'Præsentationen skal dække Q2 resultater og Q3 forecast.' },
+                { id: 3, text: 'Opfølgning på kundesager fra sidste uge', status: 'igangvaerende', priority: 'mellem', responsible: 'Anna', type: 'Salg', deadline: '2025-08-10', time: 3, description: 'Gennemgå og besvar henvendelser fra vigtige kunder.' },
+                { id: 4, text: 'Planlæg sommerfest for medarbejdere', status: 'ny', priority: 'lav', responsible: 'HR-afdelingen', type: 'Internt', deadline: '2025-08-25', time: 10, description: 'Find lokation, send invitationer ud og arranger catering.' },
+                { id: 5, text: 'Test ny login-funktionalitet på websitet', status: 'venter', priority: 'mellem', responsible: 'Udviklingsteam', type: 'IT', deadline: '2025-08-18', time: 6, description: 'Afventer staging-miljø bliver klar.' },
+                { id: 6, text: 'Opdatering af medarbejderhåndbog', status: 'udfoert', priority: 'lav', responsible: 'HR-afdelingen', type: 'Internt', deadline: '2025-08-01', time: 4, description: 'Nye retningslinjer for hjemmearbejde er tilføjet.' },
+                { id: 7, text: 'Køb ny kaffemaskine til kontoret', status: 'ny', priority: 'mellem', responsible: 'Kontor-ansvarlig', type: 'Indkøb', deadline: '2025-08-12', time: 1, description: 'Den gamle er gået i stykker. Find en model der kan lave latte.' }
+            ];
+            let localCategories = [];
+
+            let localLinks = [
+                { id: 1, title: 'Google Analytics', url: 'https://analytics.google.com', description: 'Se besøgsstatistik og data.', category: 'Analyse', showInHeader: true },
+                { id: 2, title: 'Firma-intranet', url: '#', description: 'Interne nyheder og links.', category: 'Internt', showInHeader: true },
+                { id: 3, title: 'DigitalOcean', url: 'https://cloud.digitalocean.com', description: 'Administrer servere og hosting.', category: 'Hosting', showInHeader: false },
+                { id: 4, title: 'Ahrefs', url: 'https://ahrefs.com', description: 'Værktøj til SEO-analyse.', category: 'SEO', showInHeader: false },
+            ];
+            let localAiAgents = [
+                { id: 1, title: 'Runway ML', url: 'https://runwayml.com', category: 'Video', description: 'AI-drevet video redigering og generering.' },
+                { id: 2, title: 'Midjourney', url: 'https://www.midjourney.com', category: 'Billede', description: 'Generer billeder fra tekst-prompts.' },
+                { id: 3, title: 'Copy.ai', url: 'https://www.copy.ai', category: 'Tekst', description: 'Skriv bedre marketing-tekster og indhold.' },
+            ];
+            
+            const envelopeIcon = `<svg xmlns="http://www.w3.org/2000/svg" class="card-icon text-gray-400" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" /></svg>`;
+            const googleAnalyticsIcon = `<img src="https://www.gstatic.com/analytics-suite/header/suite/v2/ic_analytics.svg" class="card-icon">`;
+            const facebookIcon = `<svg class="card-icon text-blue-600" fill="currentColor" viewBox="0 0 24 24"><path d="M22 12c0-5.52-4.48-10-10-10S2 6.48 2 12c0 4.84 3.44 8.87 8 9.8V15H8v-3h2V9.5C10 7.57 11.57 6 13.5 6H16v3h-2c-.55 0-1 .45-1 1v2h3l-.5 3h-2.5v6.95C18.05 21.45 22 17.19 22 12z"/></svg>`;
+            const rssIcon = `<svg class="card-icon text-orange-500" fill="currentColor" viewBox="0 0 24 24"><path d="M6.18,15.64A2.18,2.18,0,1,1,4,13.46,2.18,2.18,0,0,1,6.18,15.64M4,4.44V7.6A12.44,12.44,0,0,1,16.4,20H19.56A15.6,15.6,0,0,0,4,4.44M4,10.1V13.2A6.8,6.8,0,0,1,10.8,20H13.9A9.9,9.9,0,0,0,4,10.1Z"/></svg>`;
+
+            let localIntegrations = [
+                { id: 'email', title: 'Opret via E-mail', description: 'Videresend e-mails for at oprette opgaver.', icon: envelopeIcon, status: 'info' },
+                { id: 'analytics', title: 'Google Analytics', description: 'Forbundet - henter 3 nøgletal.', icon: googleAnalyticsIcon, status: 'connected' },
+                { id: 'facebook', title: 'Facebook Ads', description: 'Forbind for at hente annonce-data.', icon: facebookIcon, status: 'disconnected' },
+                { id: 'rss', title: 'RSS Feed', description: 'Forbind et nyhedsfeed til din forside.', icon: rssIcon, status: 'rss' }
+            ];
+
+            let activeTaskTab = 'Alle';
+            let dashboardTaskView = 'day';
+            let dashboardFilters = { query: '', priority: 'alle', category: 'alle', status: 'alle' };
+            let linksFilterQuery = '';
+            let integrationsFilterQuery = '';
+            let currentModalMode = null;
+            let currentEditId = null;
+
+            // --- DOM ELEMENTS ---
+            const pages = document.querySelectorAll('.page');
+            const navLinks = document.querySelectorAll('aside .nav-link');
+            const dashboardTasksContainer = document.getElementById('dashboard-tasks-container');
+            const dashboardTaskViewSwitcher = document.getElementById('dashboard-task-view-switcher');
+            const dashboardFiltersContainer = document.getElementById('dashboard-filters');
+            const rememberCardContainer = document.getElementById('remember-card-container');
+            const taskListContent = document.getElementById('task-list-content');
+            const taskTabsContainer = document.getElementById('task-tabs');
+            const linksContainer = document.getElementById('links-container');
+            const linksFilterInput = document.getElementById('links-filter-input');
+            const integrationsFilterInput = document.getElementById('integrations-filter-input');
+            const headerLinksContainer = document.getElementById('header-links-container');
+            const aiAgentsContainer = document.getElementById('ai-agents-container');
+            const integrationsContainer = document.getElementById('integrations-container');
+            const rssFeedContainer = document.getElementById('rss-feed-container');
+            const modal = document.getElementById('modal');
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            const modalTitle = document.getElementById('modal-title');
+            const modalBody = document.getElementById('modal-body');
+            const saveSettingsBtn = document.getElementById('save-settings-btn');
+            const userNameInput = document.getElementById('user-name-input');
+            const languageSelect = document.getElementById('language-select');
+            const saveConfirmation = document.getElementById('save-confirmation');
+            const loginScreen = document.getElementById('login-screen');
+            const mainAppContainer = document.querySelector('.flex.h-screen');
+            const googleLoginBtn = document.getElementById('google-login-btn');
+            const logoutBtn = document.getElementById('logout-btn');
+            const emailInput = document.getElementById('email-input');
+            const passwordInput = document.getElementById('password-input');
+            const loginBtn = document.getElementById('login-btn');
+            const signupBtn = document.getElementById('signup-btn');
+            const authError = document.getElementById('auth-error');
+
+            // --- TRANSLATION FUNCTION ---
+            function applyTranslations() {
+                const lang = userSettings.language;
+                document.querySelectorAll('[data-translate]').forEach(el => {
+                    const key = el.dataset.translate;
+                    if (translations[lang] && translations[lang][key]) {
+                        el.textContent = translations[lang][key];
+                    }
+                });
+                // Special case for dashboard title to keep user name
+                const greetingEl = document.querySelector('[data-translate="greeting"]');
+                if(greetingEl) {
+                    const fullGreeting = `${translations[lang].greeting}, ${userSettings.name}`;
+                    greetingEl.parentElement.innerHTML = `<span data-translate="greeting">${translations[lang].greeting}</span>, <span id="user-name-display">${userSettings.name}</span>`;
+                }
+            }
+
+
+            // --- INITIALIZATION ---
+            function loadSettings() {
+                const savedSettings = localStorage.getItem('userSettings');
+                if (savedSettings) {
+                    const parsedSettings = JSON.parse(savedSettings);
+                    userSettings = { ...userSettings, ...parsedSettings };
+                }
+                
+                const savedLinks = localStorage.getItem('localLinks');
+                if (savedLinks) localLinks = JSON.parse(savedLinks);
+                
+                const savedTasks = localStorage.getItem('localTasks');
+                if(savedTasks) localTasks = JSON.parse(savedTasks);
+
+                const savedRememberCard = localStorage.getItem('rememberCardData');
+                if(savedRememberCard) rememberCardData = JSON.parse(savedRememberCard);
+                
+                const savedCategories = localStorage.getItem('localCategories');
+                if(savedCategories && JSON.parse(savedCategories).length > 0) {
+                    localCategories = JSON.parse(savedCategories);
+                } else {
+                    localCategories = [...new Set(localTasks.map(t => t.type))].sort();
+                }
+            }
+
+            function saveData() {
+                localStorage.setItem('userSettings', JSON.stringify(userSettings));
+                localStorage.setItem('localLinks', JSON.stringify(localLinks));
+                localStorage.setItem('localTasks', JSON.stringify(localTasks));
+                localStorage.setItem('rememberCardData', JSON.stringify(rememberCardData));
+                localStorage.setItem('localCategories', JSON.stringify(localCategories));
+            }
+
+
+            // --- NAVIGATION ---
+            function showPage(pageId) {
+                pages.forEach(page => page.classList.add('hidden'));
+                const pageToShow = document.getElementById(pageId);
+                if (pageToShow) pageToShow.classList.remove('hidden');
+
+                navLinks.forEach(link => {
+                    link.classList.remove('active');
+                    if (link.id === `nav-${pageId.substring(5)}`) {
+                        link.classList.add('active');
+                    }
+                });
+                
+                if (pageId === 'page-opgaver') {
+                    renderTaskTabs();
+                    renderTasksByTab(activeTaskTab);
+                }
+                if (pageId === 'page-links') {
+                    renderLinksPage();
+                }
+                 if (pageId === 'page-integrationer') {
+                    renderIntegrations();
+                }
+                if (pageId === 'page-indstillinger') {
+                    userNameInput.value = userSettings.name;
+                    languageSelect.value = userSettings.language;
+                }
+            }
+            
+            document.getElementById('nav-dashboard').addEventListener('click', () => showPage('page-dashboard'));
+            document.getElementById('nav-opgaver').addEventListener('click', () => showPage('page-opgaver'));
+            document.getElementById('nav-links').addEventListener('click', () => showPage('page-links'));
+            document.getElementById('nav-rapporter').addEventListener('click', () => showPage('page-rapporter'));
+            document.getElementById('nav-integrationer').addEventListener('click', () => showPage('page-integrationer'));
+            document.getElementById('nav-ai-agents').addEventListener('click', () => showPage('page-ai-agents'));
+            document.getElementById('nav-indstillinger').addEventListener('click', () => showPage('page-indstillinger'));
+            
+            // ===== ÆNDRET: "SPØRG AI" KNAP FUNKTIONALITET =====
+            document.getElementById('ask-ai-btn').addEventListener('click', () => {
+                // Tjek om funktionen er klar
+                if (typeof window.askAIFunction !== 'function') {
+                    alert('AI funktionen er ikke klar endnu. Prøv igen om et øjeblik.');
+                    return;
+                }
+
+                const question = prompt("Hvad vil du spørge AI om?");
+
+                if (question && question.trim() !== '') {
+                    // Vis en simpel loading besked
+                    alert("Sender dit spørgsmål til AI'en... Dette kan tage et øjeblik.");
+
+                    // Kald Cloud Function
+                    window.askAIFunction({ prompt: question })
+                        .then((result) => {
+                            const aiResponse = result.data.response;
+                            alert(`🤖 AI Svarer:\n\n${aiResponse}`);
+                        })
+                        .catch((error) => {
+                            console.error("Fejl ved kald af Cloud Function:", error);
+                            alert(`Der opstod en fejl: ${error.message}\n\n(Husk at du skal have oprettet og udgivet 'askAI' Cloud Function i dit Firebase projekt)`);
+                        });
+                }
+            });
+
+
+            // --- MODAL LOGIC ---
+            function openModal(mode, id = null) {
+                currentModalMode = mode;
+                currentEditId = id;
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                
+                let title = '';
+                let contentHTML = '';
+
+                switch(mode) {
+                    case 'addTask': title = 'Tilføj ny opgave'; contentHTML = getTaskFormHTML(); break;
+                    case 'editTask': title = 'Rediger opgave'; contentHTML = getTaskFormHTML(localTasks.find(t => t.id === id)); break;
+                    case 'addLink': title = 'Tilføj nyt link'; contentHTML = getLinkFormHTML(); break;
+                    case 'editLink': title = 'Rediger link'; contentHTML = getLinkFormHTML(localLinks.find(l => l.id === id)); break;
+                    case 'addAgent': title = 'Tilføj AI Agent'; contentHTML = getAgentFormHTML(); break;
+                    case 'editAgent': title = 'Rediger AI Agent'; contentHTML = getAgentFormHTML(localAiAgents.find(a => a.id === id)); break;
+                    case 'manageCategories': title = 'Administrer Kategorier'; contentHTML = getCategoryManagerHTML(); break;
+                }
+                modalTitle.textContent = title;
+                modalBody.innerHTML = contentHTML;
+
+                if (mode === 'manageCategories') {
+                    attachCategoryManagerListeners();
+                }
+            }
+
+            function closeModal() {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                renderAll();
+            }
+            window.closeModal = closeModal;
+            modalBackdrop.addEventListener('click', closeModal);
+
+            document.getElementById('add-task-btn-dash').addEventListener('click', () => openModal('addTask'));
+            document.getElementById('add-task-btn-opg').addEventListener('click', () => openModal('addTask'));
+            document.getElementById('add-link-btn').addEventListener('click', () => openModal('addLink'));
+            document.getElementById('add-agent-btn').addEventListener('click', () => openModal('addAgent'));
+            document.getElementById('manage-categories-btn').addEventListener('click', () => openModal('manageCategories'));
+
+            // --- FORM HTML GETTERS ---
+            function getTaskFormHTML(task = {}) {
+                let categoryOptions = localCategories.map(c => `<option value="${c}" ${task.type === c ? 'selected' : ''}>${c}</option>`).join('');
+                
+                return `
+                    <form id="modal-form" class="space-y-4">
+                        <div><label class="font-medium">Opgave</label><input type="text" id="task-text" value="${task.text || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" required></div>
+                        <div><label class="font-medium">Beskrivelse</label><textarea id="task-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${task.description || ''}</textarea></div>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div><label class="font-medium">Status</label><select id="task-status" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${['ny', 'igangvaerende', 'venter', 'udfoert'].map(s => `<option value="${s}" ${task.status === s ? 'selected' : ''}>${s.replace('igangvaerende', 'Igangværende').replace(/^\w/, c => c.toUpperCase())}</option>`).join('')}</select></div>
+                            <div><label class="font-medium">Prioritet</label><select id="task-priority" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${['lav', 'mellem', 'hoej'].map(p => `<option value="${p}" ${task.priority === p ? 'selected' : ''}>${p.replace(/^\w/, c => c.toUpperCase())}</option>`).join('')}</select></div>
+                            <div><label class="font-medium">Deadline</label><input type="date" id="task-deadline" value="${task.deadline || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1"></div>
+                            <div><label class="font-medium">Ansvarlig</label><input type="text" id="task-responsible" value="${task.responsible || 'Mig'}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1"></div>
+                        </div>
+                        <div>
+                            <label class="font-medium">Kategori</label>
+                            <select id="task-type-select" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${categoryOptions}</select>
+                        </div>
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-lg">Annuller</button>
+                            <button type="submit" class="main-button font-semibold py-2 px-5 rounded-lg">Gem Opgave</button>
+                        </div>
+                    </form>
+                `;
+            }
+
+            function getLinkFormHTML(link = {}) {
+                return `
+                    <form id="modal-form" class="space-y-4">
+                        <div><label class="font-medium">Titel</label><input type="text" id="link-title" value="${link.title || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" required></div>
+                        <div><label class="font-medium">URL</label><input type="url" id="link-url" value="${link.url || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" required placeholder="https://..."></div>
+                        <div><label class="font-medium">Kategori</label><input type="text" id="link-category" value="${link.category || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" placeholder="F.eks. SEO, Analyse, Internt..."></div>
+                        <div><label class="font-medium">Beskrivelse</label><textarea id="link-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${link.description || ''}</textarea></div>
+                        <div class="flex items-center">
+                            <input type="checkbox" id="link-showInHeader" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500" ${link.showInHeader ? 'checked' : ''}>
+                            <label for="link-showInHeader" class="ml-2 block text-sm text-gray-900">Vis i sidehoved for hurtig adgang</label>
+                        </div>
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-lg">Annuller</button>
+                            <button type="submit" class="main-button font-semibold py-2 px-5 rounded-lg">Gem Link</button>
+                        </div>
+                    </form>
+                `;
+            }
+
+            function getAgentFormHTML(agent = {}) {
+                return `
+                    <form id="modal-form" class="space-y-4">
+                        <div><label class="font-medium">Titel</label><input type="text" id="agent-title" value="${agent.title || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" required></div>
+                        <div><label class="font-medium">URL</label><input type="url" id="agent-url" value="${agent.url || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" required></div>
+                        <div><label class="font-medium">Kategori</label><input type="text" id="agent-category" value="${agent.category || ''}" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1" placeholder="F.eks. Video, Billede, Tekst"></div>
+                        <div><label class="font-medium">Beskrivelse</label><textarea id="agent-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-lg mt-1">${agent.description || ''}</textarea></div>
+                        <div class="flex justify-end space-x-4 mt-8">
+                            <button type="button" onclick="closeModal()" class="bg-gray-200 text-gray-700 font-semibold py-2 px-5 rounded-lg">Annuller</button>
+                            <button type="submit" class="main-button font-semibold py-2 px-5 rounded-lg">Gem Agent</button>
+                        </div>
+                    </form>
+                `;
+            }
+            
+            // --- CATEGORY MANAGER ---
+            function getCategoryManagerHTML() {
+                let listItems = localCategories.map(cat => {
+                    const isUsed = localTasks.some(task => task.type === cat);
+                    const deleteButtonClass = isUsed ? 'text-gray-300 cursor-not-allowed' : 'text-gray-500 hover:text-red-600';
+                    const deleteTitle = isUsed ? 'Kategorien er i brug og kan ikke slettes' : 'Slet kategori';
+                    return `
+                        <li class="flex items-center justify-between p-2 border-b">
+                            <span class="category-name">${cat}</span>
+                            <div class="flex items-center gap-2">
+                                <button class="rename-cat-btn" data-cat-name="${cat}" title="Omdøb kategori">
+                                    <svg class="h-5 w-5 text-gray-500 hover:text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg>
+                                </button>
+                                <button class="delete-cat-btn" data-cat-name="${cat}" title="${deleteTitle}">
+                                     <svg class="h-5 w-5 ${deleteButtonClass}" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                </button>
+                            </div>
+                        </li>
+                    `;
+                }).join('');
+
+                return `
+                    <div class="space-y-4">
+                        <ul id="category-list" class="max-h-64 overflow-y-auto">${listItems}</ul>
+                        <div class="pt-4 border-t">
+                            <label class="font-medium">Tilføj ny kategori</label>
+                            <div class="flex gap-2 mt-1">
+                                <input type="text" id="new-category-name" class="form-input" placeholder="Navn på ny kategori...">
+                                <button id="add-cat-btn" class="main-button font-semibold px-4 rounded-lg">Tilføj</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function attachCategoryManagerListeners() {
+                const addBtn = document.getElementById('add-cat-btn');
+                if (addBtn) {
+                    addBtn.onclick = () => {
+                        const input = document.getElementById('new-category-name');
+                        const newCat = input.value.trim();
+                        if (newCat && !localCategories.includes(newCat)) {
+                            localCategories.push(newCat);
+                            localCategories.sort();
+                            saveData();
+                            // Rerender modal content
+                            modalBody.innerHTML = getCategoryManagerHTML();
+                            attachCategoryManagerListeners();
+                        } else if (!newCat) {
+                            alert('Kategorinavn kan ikke være tomt.');
+                        } else {
+                            alert('Denne kategori findes allerede.');
+                        }
+                    };
+                }
+
+                document.querySelectorAll('.delete-cat-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        const catName = e.currentTarget.dataset.catName;
+                        const isUsed = localTasks.some(task => task.type === catName);
+                        if (isUsed) {
+                            alert('Kategorien er i brug af en eller flere opgaver og kan derfor ikke slettes.');
+                            return;
+                        }
+                        if (confirm(`Er du sikker på, du vil slette kategorien "${catName}"?`)) {
+                            localCategories = localCategories.filter(c => c !== catName);
+                            saveData();
+                            modalBody.innerHTML = getCategoryManagerHTML();
+                            attachCategoryManagerListeners();
+                        }
+                    };
+                });
+
+                document.querySelectorAll('.rename-cat-btn').forEach(btn => {
+                    btn.onclick = (e) => {
+                        const oldName = e.currentTarget.dataset.catName;
+                        const newName = prompt(`Omdøb kategorien "${oldName}":`, oldName);
+                        if (newName && newName.trim() !== '' && oldName !== newName.trim()) {
+                            if (localCategories.includes(newName.trim())) {
+                                alert(`Kategorien "${newName.trim()}" findes allerede.`);
+                                return;
+                            }
+                            // Update category in the list
+                            const index = localCategories.indexOf(oldName);
+                            if (index > -1) {
+                                localCategories[index] = newName.trim();
+                            }
+                            localCategories.sort();
+                            // Update tasks
+                            localTasks.forEach(task => {
+                                if (task.type === oldName) {
+                                    task.type = newName.trim();
+                                }
+                            });
+                            saveData();
+                            modalBody.innerHTML = getCategoryManagerHTML();
+                            attachCategoryManagerListeners();
+                        }
+                    };
+                });
+            }
+
+            // --- FORM SUBMISSION ---
+            modalBody.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                let shouldSaveTasks = false;
+                if (currentModalMode === 'addTask' || currentModalMode === 'editTask') {
+                    const taskData = {
+                        id: currentEditId || Date.now(),
+                        text: document.getElementById('task-text').value.trim(),
+                        description: document.getElementById('task-description').value.trim(),
+                        status: document.getElementById('task-status').value,
+                        priority: document.getElementById('task-priority').value,
+                        deadline: document.getElementById('task-deadline').value,
+                        responsible: document.getElementById('task-responsible').value.trim(),
+                        type: document.getElementById('task-type-select').value,
+                    };
+                    if (currentModalMode === 'addTask') localTasks.unshift(taskData);
+                    else localTasks = localTasks.map(t => t.id === currentEditId ? taskData : t);
+                    shouldSaveTasks = true;
+                } else if (currentModalMode === 'addLink' || currentModalMode === 'editLink') {
+                    const linkData = {
+                        id: currentEditId || Date.now(),
+                        title: document.getElementById('link-title').value.trim(),
+                        url: document.getElementById('link-url').value.trim(),
+                        category: document.getElementById('link-category').value.trim(),
+                        description: document.getElementById('link-description').value.trim(),
+                        showInHeader: document.getElementById('link-showInHeader').checked,
+                    };
+                    if (currentModalMode === 'addLink') localLinks.unshift(linkData);
+                    else localLinks = localLinks.map(l => l.id === currentEditId ? linkData : l);
+                } else if (currentModalMode === 'addAgent' || currentModalMode === 'editAgent') {
+                    const agentData = {
+                        id: currentEditId || Date.now(),
+                        title: document.getElementById('agent-title').value.trim(),
+                        url: document.getElementById('agent-url').value.trim(),
+                        category: document.getElementById('agent-category').value.trim(),
+                        description: document.getElementById('agent-description').value.trim(),
+                    };
+                    if (currentModalMode === 'addAgent') localAiAgents.unshift(agentData);
+                    else localAiAgents = localAiAgents.map(a => a.id === currentEditId ? agentData : a);
+                }
+                
+                // Gem alle ændringer lokalt
+                saveData();
+                closeModal();
+                
+                // Gem til Firestore, hvis det er en opgave
+                if (shouldSaveTasks) {
+                    const user = window.auth.currentUser;
+                    if (user) {
+                        await window.saveTasksToFirestore(localTasks, user.uid);
+                    }
+                }
+            });
+
+
+            // --- RENDER FUNCTIONS ---
+            function renderAll() {
+                applyTranslations();
+                renderDashboardHeader();
+                renderHeaderLinks();
+                renderTaskTabs();
+                renderTasksByTab(activeTaskTab);
+                renderDashboardTaskViewSwitcher();
+                renderDashboardFilters();
+                renderDashboardTasks();
+                renderRememberCard();
+                renderLinksPage();
+                renderAiAgents();
+                renderIntegrations();
+                renderRssFeedCard();
+            }
+            
+            function renderDashboardHeader() {
+                document.getElementById('user-name-display').textContent = userSettings.name;
+                const today = new Date();
+                document.getElementById('dashboard-date').textContent = today.toLocaleDateString('da-DK', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+            }
+            
+            function renderHeaderLinks() {
+                if (!headerLinksContainer) return;
+                const linksToShow = localLinks.filter(l => l.showInHeader);
+                headerLinksContainer.innerHTML = linksToShow.map(link => 
+                    `<a href="${link.url}" target="_blank" class="header-link">${link.title}</a>`
+                ).join('');
+            }
+            
+            function renderDashboardTaskViewSwitcher() {
+                if (!dashboardTaskViewSwitcher) return;
+                const views = [
+                    { key: 'day', label: 'I dag' },
+                    { key: 'week', label: 'Uge' },
+                    { key: 'month', label: 'Måned' },
+                    { key: 'all', label: 'Alle' },
+                ];
+                dashboardTaskViewSwitcher.innerHTML = views.map(view => 
+                    `<button class="filter-button ${dashboardTaskView === view.key ? 'active' : ''}" data-view="${view.key}">${view.label}</button>`
+                ).join('');
+            }
+            
+            function renderDashboardFilters() {
+                if (!dashboardFiltersContainer) return;
+
+                const categories = ['alle', ...localCategories];
+                
+                dashboardFiltersContainer.innerHTML = `
+                    <div class="md:col-span-1">
+                        <input type="text" id="dashboard-search-filter" value="${dashboardFilters.query}" placeholder="Søg opgave..." class="form-input">
+                    </div>
+                    <div>
+                        <select id="dashboard-priority-filter" class="form-input">
+                            <option value="alle">Alle Prioriteter</option>
+                            <option value="lav" ${dashboardFilters.priority === 'lav' ? 'selected' : ''}>Lav</option>
+                            <option value="mellem" ${dashboardFilters.priority === 'mellem' ? 'selected' : ''}>Mellem</option>
+                            <option value="hoej" ${dashboardFilters.priority === 'hoej' ? 'selected' : ''}>Høj</option>
+                        </select>
+                    </div>
+                    <div>
+                         <select id="dashboard-category-filter" class="form-input">
+                            ${categories.map(cat => `<option value="${cat}" ${dashboardFilters.category === cat ? 'selected' : ''}>${cat === 'alle' ? 'Alle Kategorier' : cat}</option>`).join('')}
+                        </select>
+                    </div>
+                     <div>
+                         <select id="dashboard-status-filter" class="form-input">
+                            <option value="alle">Alle Statusser</option>
+                            <option value="ny" ${dashboardFilters.status === 'ny' ? 'selected' : ''}>Ny</option>
+                            <option value="igangvaerende" ${dashboardFilters.status === 'igangvaerende' ? 'selected' : ''}>Igangværende</option>
+                            <option value="venter" ${dashboardFilters.status === 'venter' ? 'selected' : ''}>Venter</option>
+                            <option value="udfoert" ${dashboardFilters.status === 'udfoert' ? 'selected' : ''}>Udført</option>
+                        </select>
+                    </div>
+                `;
+            }
+
+            function renderTaskTabs() {
+                if (!taskTabsContainer) return;
+                const categories = ['Alle', ...localCategories];
+                taskTabsContainer.innerHTML = categories.map(cat => `
+                    <button class="tab-button ${activeTaskTab === cat ? 'active' : ''}" data-category="${cat}">
+                        ${cat}
+                    </button>
+                `).join('');
+            }
+
+            function renderTasksByTab(category) {
+                if (!taskListContent) return;
+                activeTaskTab = category;
+                const filteredTasks = category === 'Alle' ? localTasks : localTasks.filter(t => t.type === category);
+
+                if (filteredTasks.length === 0) {
+                    taskListContent.innerHTML = `<div class="text-center py-10"><p class="text-gray-500">Ingen opgaver fundet i denne kategori.</p></div>`;
+                    return;
+                }
+                taskListContent.innerHTML = filteredTasks.map(createTaskElement).join('');
+            }
+            
+            function renderDashboardTasks() {
+                if (!dashboardTasksContainer) return;
+                let tasksToRender = [...localTasks];
+                const today = new Date();
+                today.setHours(0,0,0,0);
+                
+                const taskTitleEl = document.getElementById('dashboard-task-title');
+
+                // 1. Filter by Time View & Set Title
+                switch(dashboardTaskView) {
+                    case 'day':
+                        taskTitleEl.textContent = 'Dagens opgaver';
+                        tasksToRender = tasksToRender.filter(t => {
+                            if (!t.deadline) return false;
+                            const deadlineDate = new Date(t.deadline);
+                            return deadlineDate.getTime() === today.getTime();
+                        });
+                        break;
+                    case 'week':
+                        taskTitleEl.textContent = 'Ugens opgaver';
+                        const oneWeekFromNow = new Date(today);
+                        oneWeekFromNow.setDate(today.getDate() + 7);
+                        tasksToRender = tasksToRender.filter(t => {
+                             if (!t.deadline) return false;
+                            const deadlineDate = new Date(t.deadline);
+                            return deadlineDate >= today && deadlineDate < oneWeekFromNow;
+                        });
+                        break;
+                    case 'month':
+                        taskTitleEl.textContent = 'Månedens opgaver';
+                        tasksToRender = tasksToRender.filter(t => {
+                             if (!t.deadline) return false;
+                            const deadlineDate = new Date(t.deadline);
+                            return deadlineDate.getMonth() === today.getMonth() && deadlineDate.getFullYear() === today.getFullYear();
+                        });
+                        break;
+                    case 'all':
+                        // Use translation for "Alle opgaver"
+                        taskTitleEl.textContent = translations[userSettings.language].tasks || "Opgaver";
+                        break; 
+                }
+                
+                // 2. Filter by search and dropdowns
+                if (dashboardFilters.query) {
+                    tasksToRender = tasksToRender.filter(t => t.text.toLowerCase().includes(dashboardFilters.query.toLowerCase()));
+                }
+                if (dashboardFilters.priority !== 'alle') {
+                    tasksToRender = tasksToRender.filter(t => t.priority === dashboardFilters.priority);
+                }
+                if (dashboardFilters.category !== 'alle') {
+                    tasksToRender = tasksToRender.filter(t => t.type === dashboardFilters.category);
+                }
+                 if (dashboardFilters.status !== 'alle') {
+                    tasksToRender = tasksToRender.filter(t => t.status === dashboardFilters.status);
+                }
+                
+                if (tasksToRender.length === 0) {
+                     dashboardTasksContainer.innerHTML = `<div class="text-center py-10"><p class="text-gray-500">Ingen opgaver matcher dine filtre.</p></div>`;
+                     return;
+                }
+                dashboardTasksContainer.innerHTML = tasksToRender.map(createTaskElement).join('');
+            }
+            
+             function renderRememberCard() {
+                if (!rememberCardContainer) return;
+                
+                const itemsHTML = rememberCardData.items.map(item => `
+                    <li class="remember-item flex items-center gap-3 py-1.5 group">
+                        <input type="checkbox" data-item-id="${item.id}" class="h-4 w-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500 flex-shrink-0" ${item.checked ? 'checked' : ''}>
+                        <span contenteditable="true" data-item-id="${item.id}" class="flex-grow ${item.checked ? 'line-through text-gray-400' : ''}">${item.text}</span>
+                        <button class="delete-item-btn text-gray-400 hover:text-red-500" data-item-id="${item.id}" title="Slet punkt">
+                            <svg class="h-4 w-4 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
+                        </button>
+                    </li>
+                `).join('');
+
+                rememberCardContainer.innerHTML = `
+                    <div class="dashboard-card h-full">
+                        <h2 id="remember-card-title" contenteditable="true" class="text-xl font-semibold text-gray-800">${rememberCardData.title}</h2>
+                        <div id="remember-card-content" class="mt-4 flex-grow">
+                            <ul class="space-y-1">${itemsHTML}</ul>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100">
+                            <button id="add-remember-item-btn" class="secondary-button w-full text-sm py-1.5">Tilføj punkt</button>
+                        </div>
+                    </div>
+                `;
+            }
+
+            function renderLinksPage() {
+                if (!linksContainer) return;
+                
+                const query = linksFilterQuery.toLowerCase();
+                const filteredLinks = localLinks.filter(link => {
+                    return link.title.toLowerCase().includes(query) ||
+                           link.description.toLowerCase().includes(query) ||
+                           (link.category && link.category.toLowerCase().includes(query));
+                });
+                
+                if (filteredLinks.length === 0) {
+                    linksContainer.innerHTML = `<div class="text-center py-10 col-span-full"><p class="text-gray-500">Ingen links matcher din søgning.</p></div>`;
+                    return;
+                }
+
+                linksContainer.innerHTML = filteredLinks.map(link => `
+                    <div class="link-card">
+                        <div class="flex items-start justify-between">
+                            <div class="flex items-start space-x-4">
+                                <img src="https://www.google.com/s2/favicons?domain=${link.url}&sz=64" class="link-card-icon" alt="Favicon for ${link.title}" onerror="this.style.display='none'">
+                                <div>
+                                    <h3 class="font-bold text-gray-800 text-lg">${link.title}</h3>
+                                    ${link.category ? `<span class="text-xs font-semibold bg-indigo-100 text-indigo-700 px-2 py-0.5 rounded-full inline-block mt-1">${link.category}</span>` : ''}
+                                </div>
+                            </div>
+                            <div class="flex items-center space-x-1 ml-4">
+                                <button class="edit-link-btn action-button text-gray-400 hover:text-blue-600" title="Rediger" data-link-id="${link.id}"><svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg></button>
+                                <button class="delete-link-btn action-button text-gray-400 hover:text-red-600" title="Slet" data-link-id="${link.id}"><svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                            </div>
+                        </div>
+                        <p class="text-sm text-gray-600 mt-4 mb-4 flex-grow">${link.description}</p>
+                        <a href="${link.url}" target="_blank" class="secondary-button text-sm font-semibold w-full text-center">Besøg link</a>
+                    </div>
+                `).join('');
+            }
+
+            function renderAiAgents() {
+                if (!aiAgentsContainer) return;
+                aiAgentsContainer.innerHTML = localAiAgents.map(agent => `
+                    <div class="dashboard-card">
+                        <img src="https://www.google.com/s2/favicons?domain=${agent.url}&sz=64" class="card-icon" alt="Favicon" onerror="this.style.display='none'">
+                        <div class="flex-grow">
+                            <div class="flex justify-between items-start">
+                                <h3 class="text-lg font-bold text-gray-800">${agent.title}</h3>
+                                <span class="text-xs font-semibold bg-purple-100 text-purple-700 px-2 py-1 rounded-full">${agent.category}</span>
+                            </div>
+                            <p class="text-sm text-gray-600 mt-2 mb-4">${agent.description}</p>
+                        </div>
+                        <div class="flex justify-between items-center mt-auto">
+                            <a href="${agent.url}" target="_blank" class="main-button text-sm font-semibold py-1.5 px-3 rounded-md">Besøg</a>
+                            <div>
+                                <button class="edit-agent-btn p-1 text-gray-400 hover:text-blue-600" data-agent-id="${agent.id}"><svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.536L16.732 3.732z" /></svg></button>
+                                <button class="delete-agent-btn p-1 text-gray-400 hover:text-red-600" data-agent-id="${agent.id}"><svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg></button>
+                            </div>
+                        </div>
+                    </div>`).join('');
+            }
+            
+            function renderIntegrations() {
+                 if (!integrationsContainer) return;
+                
+                const query = integrationsFilterQuery.toLowerCase();
+                const filteredIntegrations = localIntegrations.filter(integration => {
+                    return integration.title.toLowerCase().includes(query) ||
+                           integration.description.toLowerCase().includes(query);
+                });
+
+                if (filteredIntegrations.length === 0) {
+                    integrationsContainer.innerHTML = `<div class="text-center py-10 col-span-full"><p class="text-gray-500">Ingen integrationer matcher din søgning.</p></div>`;
+                    return;
+                }
+                
+                integrationsContainer.innerHTML = filteredIntegrations.map(integration => {
+                    let actionArea = '';
+                    let content = `<p class="text-sm text-gray-500 mt-2 flex-grow">${integration.description}</p>`;
+
+                    switch(integration.status) {
+                        case 'info': actionArea = `<div class="mt-auto bg-gray-50 p-2 rounded-lg"><code class="text-xs text-gray-700 break-all">opgave.xyz123@kontrolcenter.dk</code></div>`; break;
+                        case 'connected': actionArea = `<div class="mt-auto"><button class="bg-gray-200 text-gray-700 font-semibold py-1 px-3 rounded-md hover:bg-gray-300 text-sm w-full">Administrer</button></div>`; break;
+                        case 'disconnected': actionArea = `<div class="mt-auto"><button class="main-button font-semibold py-1 px-3 rounded-md transition-all text-sm w-full">Forbind</button></div>`; break;
+                        case 'rss':
+                            const isRssConnected = userSettings.rssFeedUrl !== '';
+                            content = `<div class="flex-grow space-y-2 mt-2">
+                                         <p class="text-sm text-gray-600">${integration.description}</p>
+                                         <input type="url" id="rss-url-input-${integration.id}" class="w-full px-2 py-1 border border-gray-300 rounded-lg text-sm" value="${userSettings.rssFeedUrl}" placeholder="https://eksempel.dk/feed">
+                                     </div>`;
+                            actionArea = `<div class="mt-auto"><button class="connect-rss-btn main-button font-semibold py-1 px-3 rounded-md transition-all text-sm w-full" data-rss-id="${integration.id}">${isRssConnected ? 'Opdater' : 'Forbind'}</button></div>`;
+                            break;
+                    }
+
+                    return `
+                        <div class="dashboard-card-compact">
+                            <div class="flex items-start gap-3">
+                                ${integration.icon}
+                                <div class="flex-grow min-w-0">
+                                    <h3 class="font-bold text-gray-800 leading-tight">${integration.title}</h3>
+                                    ${content}
+                                </div>
+                            </div>
+                            <div class="mt-2 pt-2 border-t border-gray-100">
+                                ${actionArea}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+            }
+            
+            function renderRssFeedCard() {
+                if (!rssFeedContainer) return;
+                if (userSettings.rssFeedUrl) {
+                    const simulatedFeedItems = [
+                        { title: 'Madplan uge 32', link: '#' }, { title: 'Sommerferie på MARTEC', link: '#' }, { title: 'Nyt om praktikpladser', link: '#' },
+                    ];
+                    
+                    rssFeedContainer.innerHTML = `
+                        <div class="dashboard-card h-full">
+                             <h2 id="rss-feed-title" contenteditable="true" class="text-xl font-semibold text-gray-800">${userSettings.rssFeedTitle}</h2>
+                             <ul class="space-y-3 mt-4">
+                                ${simulatedFeedItems.map(item => `<li class="border-b border-gray-100 pb-2"><a href="${item.link}" target="_blank" class="text-blue-600 hover:underline">${item.title}</a></li>`).join('')}
+                             </ul>
+                        </div>`;
+                } else {
+                    rssFeedContainer.innerHTML = '';
+                }
+            }
+
+            // --- EVENT LISTENERS ---
+            async function handleTaskActions(e) {
+                const completeBtn = e.target.closest('.complete-task-btn');
+                if (completeBtn) {
+                    e.stopPropagation();
+                    const taskId = parseInt(completeBtn.dataset.taskId, 10);
+                    const task = localTasks.find(t => t.id === taskId);
+                    if (task) {
+                        task.status = 'udfoert';
+                        saveData();
+                        renderAll();
+                    }
+                    return;
+                }
+
+                const deleteBtn = e.target.closest('.delete-task-btn');
+                if (deleteBtn) {
+                    e.stopPropagation();
+                    const taskId = parseInt(deleteBtn.dataset.taskId, 10);
+                    if (confirm('Er du sikker på, du vil slette denne opgave?')) {
+                        localTasks = localTasks.filter(t => t.id !== taskId);
+
+                        // --- ADD THIS FIRESTORE DELETE CALL ---
+                        const user = window.auth.currentUser;
+                        if (user) {
+                            await window.deleteTaskFromFirestore(user.uid, taskId);
+                        }
+                        // --- END FIRESTORE DELETE ---
+
+                        saveData();
+                        renderAll();
+                    }
+                    return;
+                }
+
+                const taskElement = e.target.closest('.task-item-clickable');
+                if (taskElement) {
+                    const taskId = parseInt(taskElement.parentElement.dataset.taskId, 10);
+                    openModal('editTask', taskId);
+                }
+            }
+            dashboardTasksContainer.addEventListener('click', async (e) => await handleTaskActions(e));
+            taskListContent.addEventListener('click', async (e) => await handleTaskActions(e));
+            
+            
+            dashboardTaskViewSwitcher.addEventListener('click', (e) => {
+                const viewButton = e.target.closest('.filter-button');
+                if (viewButton && viewButton.dataset.view) {
+                    dashboardTaskView = viewButton.dataset.view;
+                    renderAll(); 
+                }
+            });
+
+            dashboardFiltersContainer.addEventListener('input', (e) => {
+                if (e.target.id === 'dashboard-search-filter') dashboardFilters.query = e.target.value;
+                renderDashboardTasks();
+            });
+            dashboardFiltersContainer.addEventListener('change', (e) => {
+                if (e.target.id === 'dashboard-priority-filter') dashboardFilters.priority = e.target.value;
+                if (e.target.id === 'dashboard-category-filter') dashboardFilters.category = e.target.value;
+                if (e.target.id === 'dashboard-status-filter') dashboardFilters.status = e.target.value;
+                renderDashboardTasks();
+            });
+            
+            rememberCardContainer.addEventListener('click', e => {
+                if (e.target && e.target.id === 'add-remember-item-btn') {
+                    const newItem = { id: Date.now(), text: 'Nyt punkt', checked: false };
+                    rememberCardData.items.push(newItem);
+                    saveData();
+                    renderRememberCard();
+                    rememberCardContainer.querySelector(`span[data-item-id="${newItem.id}"]`).focus();
+                }
+                const deleteBtn = e.target.closest('.delete-item-btn');
+                if (deleteBtn) {
+                    const itemId = parseInt(deleteBtn.dataset.itemId, 10);
+                    rememberCardData.items = rememberCardData.items.filter(item => item.id !== itemId);
+                    saveData();
+                    renderRememberCard();
+                }
+            });
+
+            rememberCardContainer.addEventListener('change', e => {
+                if (e.target && e.target.matches('input[type="checkbox"]')) {
+                    const itemId = parseInt(e.target.dataset.itemId, 10);
+                    const item = rememberCardData.items.find(i => i.id === itemId);
+                    if (item) {
+                        item.checked = e.target.checked;
+                        saveData();
+                        renderRememberCard();
+                    }
+                }
+            });
+
+            rememberCardContainer.addEventListener('blur', e => {
+                if (e.target && e.target.id === 'remember-card-title') {
+                    rememberCardData.title = e.target.textContent;
+                    saveData();
+                }
+                if (e.target && e.target.matches('span[contenteditable="true"]')) {
+                    const itemId = parseInt(e.target.dataset.itemId, 10);
+                    const item = rememberCardData.items.find(i => i.id === itemId);
+                    if (item) {
+                        item.text = e.target.textContent;
+                        saveData();
+                    }
+                }
+            }, true); 
+            
+            document.querySelector('.lg\\:col-span-1').addEventListener('blur', e => {
+                if (e.target && e.target.id === 'rss-feed-title') {
+                    userSettings.rssFeedTitle = e.target.textContent;
+                    saveData();
+                }
+            }, true);
+
+
+            linksFilterInput.addEventListener('input', (e) => {
+                linksFilterQuery = e.target.value;
+                renderLinksPage();
+            });
+            
+            integrationsFilterInput.addEventListener('input', (e) => {
+                integrationsFilterQuery = e.target.value;
+                renderIntegrations();
+            });
+
+            linksContainer.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-link-btn');
+                const deleteBtn = e.target.closest('.delete-link-btn');
+                if (editBtn) {
+                    const linkId = parseInt(editBtn.dataset.linkId, 10);
+                    openModal('editLink', linkId);
+                } else if (deleteBtn) {
+                    const linkId = parseInt(deleteBtn.dataset.linkId, 10);
+                    if (confirm('Er du sikker på, du vil slette dette link?')) {
+                        localLinks = localLinks.filter(l => l.id !== linkId);
+                        saveData();
+                        renderAll();
+                    }
+                }
+            });
+
+            aiAgentsContainer.addEventListener('click', (e) => {
+                const editBtn = e.target.closest('.edit-agent-btn');
+                const deleteBtn = e.target.closest('.delete-agent-btn');
+                if (editBtn) {
+                    const agentId = parseInt(editBtn.dataset.agentId, 10);
+                    openModal('editAgent', agentId);
+                } else if (deleteBtn) {
+                    const agentId = parseInt(deleteBtn.dataset.agentId, 10);
+                    if (confirm('Er du sikker på, du vil slette denne AI Agent?')) {
+                        localAiAgents = localAiAgents.filter(a => a.id !== agentId);
+                        renderAiAgents();
+                    }
+                }
+            });
+
+            integrationsContainer.addEventListener('click', (e) => {
+                const rssButton = e.target.closest('.connect-rss-btn');
+                if (rssButton) {
+                    const rssId = rssButton.dataset.rssId;
+                    const rssInput = document.getElementById(`rss-url-input-${rssId}`);
+                    userSettings.rssFeedUrl = rssInput.value.trim();
+                    saveData();
+                    alert('RSS Feed URL gemt!');
+                    renderAll();
+                }
+            });
+            
+            taskTabsContainer.addEventListener('click', (e) => {
+                 const tabButton = e.target.closest('.tab-button');
+                if (tabButton) {
+                    const category = tabButton.dataset.category;
+                    activeTaskTab = category;
+                    renderTaskTabs();
+                    renderTasksByTab(category);
+                }
+            });
+            
+            languageSelect.addEventListener('change', () => {
+                userSettings.language = languageSelect.value;
+                applyTranslations();
+            });
+
+            saveSettingsBtn.addEventListener('click', () => {
+                userSettings.name = userNameInput.value.trim() || 'Bruger';
+                userSettings.language = languageSelect.value;
+                saveData();
+                renderDashboardHeader();
+                applyTranslations();
+                
+                saveConfirmation.classList.remove('hidden');
+                setTimeout(() => {
+                    saveConfirmation.classList.add('hidden');
+                }, 2000);
+            });
+
+            function createTaskElement(task) {
+                const completedClass = task.status === 'udfoert' ? 'opacity-60' : '';
+                const textClass = task.status === 'udfoert' ? 'line-through' : '';
+                let priorityIndicator = task.priority === 'hoej' ? '<div class="priority-high-indicator"></div>' : '';
+                const statusText = task.status.replace('igangvaerende', 'Igangværende').replace(/^\w/, c => c.toUpperCase());
+                const statusBadge = `<span class="status-badge status-${task.status}">${statusText}</span>`;
+                
+                let deadlineHTML = '';
+                if (task.deadline) {
+                    const deadlineDate = new Date(task.deadline + 'T00:00:00');
+                    const today = new Date(); 
+                    today.setHours(0, 0, 0, 0);
+                    let deadlineText = deadlineDate.toLocaleDateString('da-DK', { day: 'numeric', month: 'short' });
+                    let deadlineColorClass = 'bg-gray-100 text-gray-600';
+                    if (deadlineDate < today && task.status !== 'udfoert') deadlineColorClass = 'bg-red-100 text-red-700';
+                    else if (deadlineDate.toDateString() === today.toDateString() && task.status !== 'udfoert') { deadlineText = 'I dag'; deadlineColorClass = 'bg-yellow-100 text-yellow-800'; }
+                    deadlineHTML = `<span class="text-sm font-medium ${deadlineColorClass} px-2 py-1 rounded-md">${deadlineText}</span>`;
+                }
+                
+                const completeButton = task.status !== 'udfoert' ? `
+                    <button title="Fuldfør opgave" class="complete-task-btn action-button text-gray-400 hover:text-green-600" data-task-id="${task.id}">
+                        <svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                    </button>
+                ` : '';
+                
+                return `
+                    <div class="task-item p-4 flex items-center justify-between ${completedClass}" data-task-id="${task.id}">
+                        <div class="flex items-center flex-grow min-w-0 task-item-clickable flex-1">
+                            <div class="flex-shrink-0 mt-1.5">${priorityIndicator}</div>
+                            <div class="ml-4">
+                                <span class="font-semibold text-gray-800 ${textClass}">${task.text}</span>
+                                <p class="text-sm text-gray-500 mt-1">${task.responsible}</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center space-x-3 flex-shrink-0 ml-4">
+                            <span class="text-sm font-semibold text-gray-700 hidden sm:block">${task.type}</span>
+                            ${statusBadge}
+                            ${deadlineHTML}
+                            <div class="flex items-center space-x-1 border-l pl-2 ml-2">
+                                ${completeButton}
+                                <button title="Slet opgave" class="delete-task-btn action-button text-gray-400 hover:text-red-600" data-task-id="${task.id}">
+                                    <svg class="h-5 w-5 pointer-events-none" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.134-2.033-2.134H8.71c-1.123 0-2.033.954-2.033 2.134v.916m7.5 0a48.667 48.667 0 00-7.5 0" /></svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>`;
+            }
+            
+            // --- INITIAL RENDER ---
+            loadSettings();
+            showPage('page-dashboard');
+            renderAll();
+
+            // --- AUTHENTICATION LOGIC ---
+            onAuthStateChanged(window.auth, user => {
+                if (user) {
+                    // Bruger ER logget ind
+                    loginScreen.classList.add('hidden');
+                    mainAppContainer.classList.remove('hidden');
+                    logoutBtn.style.display = 'flex'; // Vis log-ud knappen
+
+                    userSettings.name = user.displayName || user.email;
+                    
+                    // Sørg for at localTasks opdateres EFTER brugeren er logget ind
+                    window.loadTasksFromFirestore(user.uid).then(tasks => {
+                        localTasks = tasks;
+                        renderAll();
+                    });
+
+                } else {
+                    // Bruger er IKKE logget ind
+                    loginScreen.classList.remove('hidden');
+                    mainAppContainer.classList.add('hidden');
+                    logoutBtn.style.display = 'none'; // Skjul log-ud knappen
+                    
+                    // Brug lokale data, når brugeren er logget ud
+                    localTasks = JSON.parse(localStorage.getItem('localTasks')) || [];
+                    renderAll();
+                }
+            });
+            
+            // Håndter klik på "Log ind" knap
+            loginBtn.addEventListener('click', () => {
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                authError.textContent = '';
+
+                signInWithEmailAndPassword(window.auth, email, password)
+                    .then((userCredential) => {
+                        console.log('Login succes:', userCredential.user);
+                    })
+                    .catch((error) => {
+                        console.error('Login fejl:', error.code);
+                        if (error.code === 'auth/invalid-credential' || error.code === 'auth/wrong-password') {
+                            authError.textContent = 'Forkert e-mail eller adgangskode.';
+                        } else {
+                            authError.textContent = 'Der opstod en fejl. Prøv igen.';
+                        }
+                    });
+            });
+
+            // Håndter klik på "Opret bruger" knap
+            signupBtn.addEventListener('click', () => {
+                const email = emailInput.value;
+                const password = passwordInput.value;
+                authError.textContent = '';
+
+                createUserWithEmailAndPassword(window.auth, email, password)
+                    .then((userCredential) => {
+                        console.log('Bruger oprettet:', userCredential.user);
+                    })
+                    .catch((error) => {
+                        console.error('Fejl ved oprettelse:', error.code);
+                        if (error.code === 'auth/email-already-in-use') {
+                            authError.textContent = 'E-mailen er allerede i brug.';
+                        } else if (error.code === 'auth/weak-password') {
+                            authError.textContent = 'Adgangskoden skal være på mindst 6 tegn.';
+                        } else {
+                            authError.textContent = 'Ugyldig e-mail. Prøv igen.';
+                        }
+                    });
+            });
+
+            // Håndter klik på "Log ind med Google"
+            googleLoginBtn.addEventListener('click', () => {
+                const provider = new window.GoogleAuthProvider();
+                window.signInWithPopup(window.auth, provider)
+                    .then(result => {
+                        console.log("Login succes!", result.user);
+                    })
+                    .catch(error => {
+                        console.error("Login fejl:", error);
+                        authError.textContent = "Der opstod en fejl under Google login.";
+                    });
+            });
+
+            // Håndter klik på "Log ud"
+            logoutBtn.addEventListener('click', () => {
+                window.signOut(window.auth)
+                    .then(() => {
+                        console.log("Logget ud succesfuldt.");
+                        // Sørg for, at den lokale tilstand afspejler den loggede-ud tilstand
+                        localTasks = JSON.parse(localStorage.getItem('localTasks')) || [];
+                        renderAll();
+                    })
+                    .catch(error => console.error("Fejl ved log ud:", error));
+            });
+        });
+    </script>
+</body>
+</html>

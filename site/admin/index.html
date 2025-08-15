@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+
+<html lang="da">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1" name="viewport"/>
+<title>Admin Editor</title>
+<meta content="noindex, nofollow" name="robots"/>
+<link href="../gjs/grapes.min.css" rel="stylesheet"/>
+<style>html,body{height:100%;margin:0}#gjs{height:100%}</style>
+</head>
+<body>
+<div id="gjs"></div>
+
+
+
+
+<script src="../gjs/grapes.min.js"></script>
+<script src="../gjs/grapesjs-preset-webpage.min.js"></script>
+<script>
+    const editor = grapesjs.init({
+      container: '#gjs',
+      height: '100%',
+      storageManager: false,
+      plugins: ['gjs-preset-webpage'],
+      canvas: {
+        styles: [
+          'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap'
+        ],
+        scripts: [
+          'https://cdn.tailwindcss.com'
+        ]
+      }
+    });
+
+    // Load body HTML and inline <style> tags from the frontpage
+    fetch('../index.html').then(r=>r.text()).then(src => {
+      const doc = new DOMParser().parseFromString(src, 'text/html');
+      const bodyHTML = doc.body ? doc.body.innerHTML : src;
+      editor.setComponents(bodyHTML);
+
+      const styles = Array.from(doc.querySelectorAll('style'))
+        .map(s => s.textContent).join('\n');
+      if (styles) editor.setStyle(styles);
+    });
+  </script>
+</body>
+</html>
