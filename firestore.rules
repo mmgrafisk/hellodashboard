@@ -1,0 +1,20 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Public read of 'status' collection for demo KPIs (optional)
+    match /status/{docId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+
+    // Tasks: require auth for read/write
+    match /tasks/{taskId} {
+      allow read, write: if request.auth != null;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}

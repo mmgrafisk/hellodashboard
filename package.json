@@ -1,0 +1,13 @@
+{
+  "name": "hellodashboard",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "echo \"Static build step completed\"",
+    "seed": "node seed.mjs"
+  },
+  "type": "module",
+  "dependencies": {
+    "firebase-admin": "^12.5.0"
+  }
+}

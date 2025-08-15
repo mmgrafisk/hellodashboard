@@ -1,0 +1,30 @@
+{
+  "tasks": [
+    {
+      "title": "Sæt Netlify env var",
+      "status": "åben"
+    },
+    {
+      "title": "Trigger nyt deploy",
+      "status": "åben"
+    },
+    {
+      "title": "Test opret opgave",
+      "status": "åben"
+    },
+    {
+      "title": "Ryd TODOs i UI",
+      "status": "igang"
+    }
+  ],
+  "status": [
+    {
+      "key": "activeCount",
+      "value": 3
+    },
+    {
+      "key": "doneToday",
+      "value": 0
+    }
+  ]
+}
