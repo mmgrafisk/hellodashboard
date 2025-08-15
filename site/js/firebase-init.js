@@ -4,22 +4,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.3/fireba
 import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-auth.js";
 import { getFirestore } from "https://www.gstatic.com/firebasejs/10.12.3/firebase-firestore.js";
 
-export const state = {
-  app: null,
-  db: null,
-  auth: null,
-  user: null,
-  online: false,
-};
+export const state = { app:null, db:null, auth:null, user:null, online:false };
 
 function readConfig() {
-  // 1) From dedicated file if present
   if (window._FIREBASE_CONFIG && window._FIREBASE_CONFIG.apiKey) return window._FIREBASE_CONFIG;
-  // 2) From meta tag content (optional)
   const meta = document.querySelector('meta[name="firebase-config"]');
-  if (meta) {
-    try { return JSON.parse(meta.content); } catch(e){}
-  }
+  if (meta) { try { return JSON.parse(meta.content); } catch(e){} }
   return null;
 }
 
@@ -37,7 +27,7 @@ export function initFirebase() {
   state.online = true;
 
   const provider = new GoogleAuthProvider();
-  window.firebaseLogin = () => signInWithPopup(state.auth, provider);
+  window.firebaseLogin  = () => signInWithPopup(state.auth, provider);
   window.firebaseLogout = () => signOut(state.auth);
 
   onAuthStateChanged(state.auth, (u) => {
