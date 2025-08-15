@@ -1,9 +1,10 @@
 {
   "name": "hellodashboard",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "private": true,
   "type": "module",
   "scripts": {
+    "prebuild": "bash ./scripts/fetch_gjs.sh",
     "build": "echo \"Static build step completed\""
   }
 }
