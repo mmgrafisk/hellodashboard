@@ -1,30 +1,28 @@
 {
   "tasks": [
     {
-      "title": "Sæt Netlify env var",
-      "status": "åben"
+      "id": "t-001",
+      "title": "Første testopgave",
+      "priority": "high",
+      "estimateMinutes": 60,
+      "createdAt": 1693495200000,
+      "ownerUid": "DEV_USER_UID"
     },
     {
-      "title": "Trigger nyt deploy",
-      "status": "åben"
-    },
-    {
-      "title": "Test opret opgave",
-      "status": "åben"
-    },
-    {
-      "title": "Ryd TODOs i UI",
-      "status": "igang"
+      "id": "t-002",
+      "title": "Skriv Firestore regler",
+      "priority": "medium",
+      "estimateMinutes": 30,
+      "createdAt": 1693498800000,
+      "ownerUid": "DEV_USER_UID"
     }
   ],
   "status": [
     {
-      "key": "activeCount",
-      "value": 3
-    },
-    {
-      "key": "doneToday",
-      "value": 0
+      "id": "app",
+      "env": "dev",
+      "message": "Alt kører fint i udvikling",
+      "updatedAt": 1693502400000
     }
   ]
 }

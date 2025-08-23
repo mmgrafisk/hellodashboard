@@ -1,17 +1,40 @@
+# Firebase Firestore seeding (CommonJS)
 
-# Patch: Robust fetch of firebase-config.json
-
-Denne patch sikrer, at `firebase-config.json` ALTID skrives:
-- til projektroden,
-- til Netlify's publish dir hvis eksponeret (PUBLISH_DIR/NETLIFY_PUBLISH_DIR),
-- og til `public/`, `dist/`, `build/` hvis de findes.
+## Struktur
+```
+firebase-seed-cjs/
+  seed.js
+  seeds/
+    seed.data.json
+  package.json
+  .gitignore
+  serviceAccount.json  # Læg din rigtige nøgle her (commit IKKE)
+```
 
 ## Brug
-1) Erstat din `scripts/fetch_gjs.sh` med den i denne ZIP (gør den exekverbar).
-2) Erstat/merge `package.json` scripts så `prebuild` kører fetch automatisk.
-3) (Valgfrit) Læg `netlify.toml` i roden for at tvinge rækkefølgen.
-4) Trigger et nyt deploy.
+1. Læg din service account fil som `serviceAccount.json` i roden **eller** sæt miljøvariabel:
+   - Windows PowerShell:
+     ```powershell
+     $env:GOOGLE_APPLICATION_CREDENTIALS = "$PWD\serviceAccount.json"
+     ```
+   - macOS/Linux bash:
+     ```bash
+     export GOOGLE_APPLICATION_CREDENTIALS="$PWD/serviceAccount.json"
+     ```
 
-## Tjek
-- I build-loggen skal du se linjer ala: `Wrote /.../firebase-config.json`
-- På sitet: Besøg `/firebase-config.json` – må ikke være 404.
+2. Installer:
+   ```bash
+   npm install
+   ```
+
+3. Seed:
+   ```bash
+   npm run seed
+   ```
+
+4. Deploy Firestore regler (hvis relevant):
+   ```bash
+   npx firebase login
+   npx firebase init firestore   # peg på dine rules
+   npm run deploy:rules
+   ```
